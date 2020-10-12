@@ -39,14 +39,15 @@ def __save_new_location_names(company_id, new_location_names=[]):
     cnx = get_db_connection()
     cursor = cnx.cursor()
     sql = "insert into location(name, company_id) values(%s, %s)"
+    new_locations = []
     for new_location_name in new_location_names:
-        cursor.execute(
-            sql,
+        new_locations.append(
             (
                 new_location_name,
                 company_id,
-            ),
+            )
         )
+    cursor.executemany(sql, new_locations)
 
     cnx.commit()
     cursor.close()
@@ -90,16 +91,7 @@ def __save_new_rental_routes(new_rental_routes=[]):
     cnx = get_db_connection()
     cursor = cnx.cursor()
     sql = "insert into rental_route(pick_up_location_id, drop_off_location_id) values(%s, %s)"
-    for new_rental_route in new_rental_routes:
-        pick_up_location_id = new_rental_route[0]
-        drop_off_location_id = new_rental_route[1]
-        cursor.execute(
-            sql,
-            (
-                pick_up_location_id,
-                drop_off_location_id,
-            ),
-        )
+    cursor.executemany(sql, new_rental_routes)
 
     cnx.commit()
     cursor.close()
