@@ -20,6 +20,24 @@ def is_valid_db_entity_id(input_value, valid_db_entity_ids=None):
     return int(input_value) in valid_db_entity_ids
 
 
+def split_db_entity_ids(input_value):
+    raw_ids = input_value.split(",")
+    ids = []
+    for raw_id in raw_ids:
+        if is_valid_db_entity_id(raw_id):
+            ids.append(int(raw_id.strip()))
+
+    return ids
+
+
+def join_db_entity_ids(db_entity_ids, separator=", "):
+    str_ids = []
+    for db_entity_id in db_entity_ids:
+        str_ids.append(str(db_entity_id))
+
+    return separator.join(str_ids)
+
+
 def is_quit_command(input_value):
     return input_value == "q"
 
