@@ -9,13 +9,13 @@ def __get_rental_duration_operation(id):
     sql = "select id, type, time_gap, array_size, description from rental_duration_operation t where t.id = %s"
     rental_duration_operation = convert_tuple_to_dict(
         cursor.fetchone(sql, (id,)),
-        {
-            "0": "id",
-            "1": "type",
-            "2": "time_gap",
-            "3": "array_size",
-            "4": "description",
-        },
+        [
+            "id",
+            "type",
+            "time_gap",
+            "array_size",
+            "description",
+        ],
     )
 
     cursor.close()
@@ -29,12 +29,12 @@ def __get_quote_scraping_task(id):
     sql = "select id, created_at, created_by, rental_duration_operation_id from quote_scraping_task t where t.id = %s"
     quote_scraping_task = convert_tuple_to_dict(
         cursor.fetchone(sql, (id,)),
-        {
-            "0": "id",
-            "1": "created_at",
-            "2": "created_by",
-            "3": "rental_duration_operation_id",
-        },
+        [
+            "id",
+            "created_at",
+            "created_by",
+            "rental_duration_operation_id",
+        ],
     )
     rental_duration_operation_id = quote_scraping_task.pop(
         "rental_duration_operation_id", None
@@ -66,12 +66,12 @@ def __get_rental_route(id):
                     AND t1.drop_off_location_id = t3.id and t1.id = %s """
     rental_route = convert_tuple_to_dict(
         cursor.fetchone(sql, (id,)),
-        {
-            "0": "pick_up_location_id",
-            "1": "drop_off_location_id",
-            "2": "pick_up_location_name",
-            "3": "drop_off_location_name",
-        },
+        [
+            "pick_up_location_id",
+            "drop_off_location_id",
+            "pick_up_location_name",
+            "drop_off_location_name",
+        ],
     )
 
     cursor.close()
@@ -85,7 +85,7 @@ def __get_rental_duration(id):
     sql = "select id, pick_up_datetime, drop_off_datetime from rental_duration t where t.id = %s"
     rental_duration = convert_tuple_to_dict(
         cursor.fetchone(sql, (id,)),
-        {"0": "id", "1": "pick_up_datetime", "2": "drop_off_datetime"},
+        ["id", "pick_up_datetime", "drop_off_datetime"],
     )
 
     cursor.close()
@@ -185,13 +185,13 @@ def get_rental_duration_operations():
         rental_duration_operations.append(
             convert_tuple_to_dict(
                 rental_duration_operation,
-                {
-                    "0": "id",
-                    "1": "type",
-                    "2": "time_gap",
-                    "3": "array_size",
-                    "4": "description",
-                },
+                [
+                    "id",
+                    "type",
+                    "time_gap",
+                    "array_size",
+                    "description",
+                ],
             )
         )
 
