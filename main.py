@@ -147,7 +147,16 @@ def prompt_quote_scraping_task_creation():
 
 
 def prompt_quotes_scraping():
-    pass
+    quote_scraping_task_id = None
+
+    while not is_valid_db_entity_id(quote_scraping_task_id):
+        quote_scraping_task_id = input("Please input the quote scraping task ID: ")
+        if is_quit_command(quote_scraping_task_id):
+            return
+        elif not is_valid_db_entity_id(quote_scraping_task_id):
+            print(create_warning("The quote scraping task ID is invalid."))
+
+    execute_command(["3", int(quote_scraping_task_id)])
 
 
 while True:
