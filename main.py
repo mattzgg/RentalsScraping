@@ -4,7 +4,10 @@ from gorentals.location import (
     scrape_locations as scrape_locations_for_gorentals,
 )
 from db.location import save_scraped_locations
-from db.quote import get_rental_duration_operations
+from db.quote import (
+    get_rental_duration_operations,
+    create_quote_scraping_task as create_quote_scraping_task_in_db,
+)
 from utils.ui import (
     is_quit_command,
     is_empty_string,
@@ -27,14 +30,14 @@ def create_quote_scraping_task(*args):
     rental_duration_operation_id = args[1]
     booking_request_template_configs = args[2]
 
-    print(
-        created_by
-        + ", "
-        + str(rental_duration_operation_id)
-        + ", "
-        + str(booking_request_template_configs)
+    quote_scraping_task_id = create_quote_scraping_task_in_db(
+        created_by, rental_duration_operation_id, booking_request_template_configs
     )
-    pass
+    print(
+        "The quote scraping task["
+        + str(quote_scraping_task_id)
+        + "] has been created successfully."
+    )
 
 
 def scrape_quotes(*args):

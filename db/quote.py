@@ -7,8 +7,9 @@ from utils.datatype import convert_tuple_to_dict
 def __get_rental_duration_operation(id):
     def invoke_cursor_func(cursor):
         sql = "select id, type, time_gap, array_size, description from rental_duration_operation t where t.id = %s"
+        cursor.execute(sql, (id,))
         return convert_tuple_to_dict(
-            cursor.fetchone(sql, (id,)),
+            cursor.fetchone(),
             [
                 "id",
                 "type",
@@ -109,52 +110,6 @@ def __get_booking_request_templates(quote_scraping_task_id):
     return execute_query(invoke_cursor_func)
 
 
-def __create_booking_requests(quote_scraping_task_id):
-    def __create_booking_requests_based_on_template(cursor, booking_request_template):
-        rental_duration_operation = booking_request_template["quote_scraping_task"][
-            "rental_duration_operation"
-        ]
-        array_size = rental_duration_operation["array_size"]
-        index = 0
-        booking_requests = []
-        while index < array_size:
-            booking_requests.append(
-                (
-                    booking_request_template["id"],
-                    index,
-                )
-            )
-            index += 1
-
-        sql = "insert into booking_request(booking_request_template_id, index) value(%s, %s)"
-        cursor.executemany(sql, booking_requests)
-
-    def invoke_cursor_func(cursor):
-        # delete the relevant rental quotes.
-        sql = """delete from rental_quote t1 where t1.booking_request_id in (
-            select booking_request_id from booking_request t2 where t2.booking_request_template_id in (
-                select booking_request_template_id from booking_request_template t3 where t3.quote_scraping_task_id = %s
-            )
-        )"""
-        cursor.execute(sql, (quote_scraping_task_id,))
-
-        # delete the relevant booking requests.
-        sql = """delete from booking_request t1 where t1.booking_request_template_id in (
-                select booking_request_template_id from booking_request_template t3 where t3.quote_scraping_task_id = %s
-            )"""
-        cursor.execute(sql, (quote_scraping_task_id,))
-
-        booking_request_templates = __get_booking_request_templates(
-            quote_scraping_task_id
-        )
-        for booking_request_template in booking_request_templates:
-            __create_booking_requests_based_on_template(
-                cursor, booking_request_template
-            )
-
-    execute_transaction(invoke_cursor_func)
-
-
 def get_rental_duration_operations():
     def invoke_cursor_func(cursor):
         sql = "select id, type, time_gap, array_size, description from rental_duration_operation"
@@ -180,19 +135,65 @@ def get_rental_duration_operations():
     return execute_query(invoke_cursor_func)
 
 
-def create_quote_scraping_task(created_by, rental_duraion_operation_id):
-    def invoke_cursor_func(cursor):
+def create_quote_scraping_task(
+    created_by, rental_duraion_operation_id, booking_request_template_configs
+):
+    def execute_step_1(cursor):
+        """Create the quote scraping task"""
         sql = "insert into quote_scraping_task(created_at, created_by, rental_duration_operation_id) values(%s, %s, %s)"
         cursor.execute(
-            sql, (datetime.datetime(), created_by, rental_duraion_operation_id)
+            sql,
+            (
+                datetime.datetime.now(),
+                created_by,
+                rental_duraion_operation_id,
+            ),
         )
         return cursor.lastrowid
+
+    def execute_step_2(cursor, quote_scraping_task_id):
+        """Create the booking request templates"""
+        rental_duration_operation = __get_rental_duration_operation(
+            rental_duraion_operation_id
+        )
+        sql = "insert into booking_request_template(rental_route_id, rental_duration_id, quote_scraping_task_id) values(%s, %s, %s)"
+        for booking_request_template_config in booking_request_template_configs:
+            params = booking_request_template_config + (quote_scraping_task_id,)
+            cursor.execute(sql, params)
+            booking_request_template_id = cursor.lastrowid
+            __create_booking_requests_based_on_template(
+                cursor, booking_request_template_id, rental_duration_operation
+            )
+
+    def __create_booking_requests_based_on_template(
+        cursor, booking_request_template_id, rental_duration_operation
+    ):
+        array_size = rental_duration_operation["array_size"]
+        index_in_array = 0
+        booking_requests = []
+        while index_in_array < array_size:
+            booking_requests.append(
+                (
+                    booking_request_template_id,
+                    index_in_array,
+                )
+            )
+            index_in_array += 1
+
+        sql = "insert into booking_request(booking_request_template_id, index_in_array) values(%s, %s)"
+        cursor.executemany(sql, booking_requests)
+
+    def invoke_cursor_func(cursor):
+        quote_scraping_task_id = execute_step_1(cursor)
+        execute_step_2(cursor, quote_scraping_task_id)
+        return quote_scraping_task_id
 
     return execute_transaction(invoke_cursor_func)
 
 
-def get_booking_requests_for_quote_scraping(quote_scraping_task_id):
-    pass
+def get_booking_requests(quote_scraping_task_id):
+    def invoke_cursor_func(cursor):
+        pass
 
 
 def save_rental_categroy(rental_category):
