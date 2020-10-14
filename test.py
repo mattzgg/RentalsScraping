@@ -1,4 +1,4 @@
-from utils.ui import is_empty_command
+from utils.ui import is_empty_string, parse_booking_request_template_configs_str
 
 # def foo():
 #     def bar():
@@ -21,6 +21,10 @@ from utils.ui import is_empty_command
 # foo = {"id": 1, "first_name": "Matthew"}
 # print(foo["id"])
 # print(foo["first_name"])
-# print(is_empty_command("     "))
+# print(is_empty_string("     "))
 
-isinstance("abc", str)
+# isinstance("abc", str)
+
+configs_str = "(1, 2) (3, 4) (5, 6)"
+configs = parse_booking_request_template_configs_str(configs_str)
+print(configs)

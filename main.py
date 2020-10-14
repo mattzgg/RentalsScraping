@@ -9,10 +9,9 @@ from utils.ui import (
     is_quit_command,
     is_empty_string,
     is_valid_db_entity_id,
-    split_db_entity_ids,
-    join_db_entity_ids,
     create_option,
     create_warning,
+    parse_booking_request_template_configs_str,
 )
 
 
@@ -26,13 +25,14 @@ def scrape_locations(*args):
 def create_quote_scraping_task(*args):
     created_by = args[0]
     rental_duration_operation_id = args[1]
-    booking_request_template_ids = args[2]
+    booking_request_template_configs = args[2]
 
     print(
         created_by
         + ", "
         + str(rental_duration_operation_id)
-        + join_db_entity_ids(booking_request_template_ids)
+        + ", "
+        + str(booking_request_template_configs)
     )
     pass
 
@@ -82,7 +82,7 @@ def prompt_quote_scraping_task_creation():
     created_by = None
     rental_duration_operation_id = None
     valid_rental_duration_operation_ids = []
-    booking_request_template_ids = []
+    booking_request_template_configs = []
 
     # capture the name of person who creates this task
     while is_empty_string(created_by):
@@ -115,26 +115,30 @@ def prompt_quote_scraping_task_creation():
         ):
             print(create_warning("Rental duration operation ID is invalid."))
 
-    # capture booking request templates related to the new task
-    while not booking_request_template_ids:
-        booking_request_template_ids_str = input(
-            "Please input the booking request template IDs separated by comma: "
+    # capture booking request template configs related to the new task
+    while not booking_request_template_configs:
+        booking_request_template_configs_str = input(
+            "Please input the booking request template configs string: "
         )
-        if is_quit_command(booking_request_template_ids_str):
+        if is_quit_command(booking_request_template_configs_str):
             return
 
-        booking_request_template_ids = split_db_entity_ids(
-            booking_request_template_ids_str
+        booking_request_template_configs = parse_booking_request_template_configs_str(
+            booking_request_template_configs_str
         )
-        if not booking_request_template_ids:
-            print(create_warning("The booking request template IDs is invalid."))
+        if not booking_request_template_configs:
+            print(
+                create_warning(
+                    "The booking request template configs string is invalid."
+                )
+            )
 
     execute_command(
         [
             "2",
             created_by,
             int(rental_duration_operation_id),
-            booking_request_template_ids,
+            booking_request_template_configs,
         ]
     )
 
