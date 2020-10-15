@@ -5,7 +5,9 @@ SELECT
     t1.pick_up_location_id,
     t1.drop_off_location_id,
     t2.name pick_up_location_name,
+    t2.input_value pick_up_location_input_value,
     t3.name drop_off_location_name,
+    t3.input_value drop_off_location_input_value,
     t4.id company_id,
     t4.name company_name
 FROM

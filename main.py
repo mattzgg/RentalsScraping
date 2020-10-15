@@ -3,7 +3,7 @@ from budget.location import scrape_locations as scrape_locations_for_budget
 from gorentals.location import (
     scrape_locations as scrape_locations_for_gorentals,
 )
-from db.location import save_scraped_locations
+from db.location import save_locations
 from db.quote import (
     get_rental_duration_operations,
     create_quote_scraping_task as create_quote_scraping_task_in_db,
@@ -21,8 +21,8 @@ from utils.ui import (
 def scrape_locations(*args):
     company_id = args[0]
     scrape_locations_func = SCRAPE_LOCATIONS_FUNCS[company_id]
-    scraped_location_names = scrape_locations_func()
-    save_scraped_locations(int(company_id), scraped_location_names)
+    locations = scrape_locations_func()
+    save_locations(int(company_id), locations)
 
 
 def create_quote_scraping_task(*args):

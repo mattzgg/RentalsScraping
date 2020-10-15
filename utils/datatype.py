@@ -28,3 +28,11 @@ def convert_tuple_to_dict(tuple_value, tuple_item_names):
         index += 1
 
     return result
+
+
+def is_empty_string(input_value):
+    return (
+        input_value is None
+        or not isinstance(input_value, str)
+        or input_value.strip() == ""
+    )

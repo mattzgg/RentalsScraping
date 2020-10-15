@@ -1,4 +1,5 @@
 from utils.ui import is_empty_string, parse_booking_request_template_configs_str
+from budget.location import scrape_locations
 
 # def foo():
 #     def bar():
@@ -25,6 +26,8 @@ from utils.ui import is_empty_string, parse_booking_request_template_configs_str
 
 # isinstance("abc", str)
 
-configs_str = "(1, 2) (3, 4) (5, 6)"
-configs = parse_booking_request_template_configs_str(configs_str)
-print(configs)
+# configs_str = "(1, 2) (3, 4) (5, 6)"
+# configs = parse_booking_request_template_configs_str(configs_str)
+# print(configs)
+
+scrape_locations()
