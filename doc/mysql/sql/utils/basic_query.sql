@@ -20,7 +20,9 @@ select @todays_quote_scraping_task_id;
 select * from booking_request;
 select count(*) from booking_request;
 delete from booking_request t where t.id > 0;
-call get_pending_booking_requests(0, 10);
+call get_todays_pending_booking_requests(0, 10);
+call get_todays_booking_request_statistics(@tbrs_total, @tbrs_pending_count);
+select @tbrs_total, @tbrs_pending_count;
 
 select * from rental_quote;
 select distinct booking_request_id from rental_quote;
