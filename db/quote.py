@@ -13,29 +13,45 @@ def add_todays_quote_scraping_task():
     return execute_query(invoke_cursor_func)
 
 
-def get_pending_booking_requests():
+def get_todays_booking_request_statistics():
     def invoke_cursor_func(cursor):
-        starting_index = 0
-        page_count = 1000
-        total = 0
-        while True:
-            pending_booking_requests = []
-            args = [starting_index, page_count]
-            cursor.callproc("get_pending_booking_requests", args)
-            for result in cursor.stored_results():
-                pending_booking_requests = result.fetchall()
-                total += len(pending_booking_requests)
-                for pending_booking_request in pending_booking_requests:
-                    print(pending_booking_request)
+        args = [0, 0]
+        result_args = cursor.callproc("get_todays_booking_request_statistics", args)
+        return {"total": result_args[0], "pending_count": result_args[1]}
 
-            if len(pending_booking_requests) == 0:
-                break
+    return execute_query(invoke_cursor_func)
 
-            starting_index += page_count
 
-        print("The total of today's pending booking requests is ", str(total))
+def get_todays_pending_booking_requests():
+    pending_booking_request_property_names = [
+        "company_id",
+        "booking_request_id",
+        "rental_route_id",
+        "pick_up_location_name",
+        "drop_off_location_name",
+        "pick_up_location_input_value",
+        "drop_off_location_input_value",
+        "pick_up_date",
+        "pick_up_time",
+        "drop_off_date",
+        "drop_off_time",
+    ]
 
-    execute_query(invoke_cursor_func)
+    def convert_func(pending_booking_request):
+        return convert_tuple_to_dict(
+            pending_booking_request, pending_booking_request_property_names
+        )
+
+    def invoke_cursor_func(cursor):
+        pending_booking_requests = []
+
+        cursor.callproc("get_todays_pending_booking_requests", [0, 1000])
+        for result in cursor.stored_results():
+            pending_booking_requests = map(convert_func, result.fetchall())
+
+        return pending_booking_requests
+
+    return execute_query(invoke_cursor_func)
 
 
 def save_vehicle_categroy(vehicle_category):

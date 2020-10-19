@@ -12,29 +12,25 @@ from utils import constants
 import time
 
 
-def scrape_quotes(booking_requests=[]):
-    """Returns a list of rental quotes from the Budget's location page"""
-    chrome_options = Options()
-    # chrome_options.add_argument("--headless")
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.maximize_window()
-    driver.get(constants.BUDGET_BOOKING_PAGE_URL)
-
-    pick_up_loaction_input_value = booking_requests[0]["pick_up_location_input_value"]
-    fill_pick_up_location(driver, pick_up_loaction_input_value)
-
-    time.sleep(60)
-
-    driver.quit()
-
-
-def __scrape_quotes_for_book_request(booking_request):
+def scrape_quotes(booking_request):
     pick_up_location_input_value = booking_request["pick_up_location_input_value"]
     drop_off_location_input_value = booking_request["drop_off_location_input_value"]
     pick_up_date = booking_request["pick_up_date"]
     pick_up_time = booking_request["pick_up_time"]
     drop_off_date = booking_request["drop_off_date"]
     drop_off_time = booking_request["drop_off_time"]
+
+    chrome_options = Options()
+    # chrome_options.add_argument("--headless")
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.maximize_window()
+    driver.get(constants.BUDGET_BOOKING_PAGE_URL)
+
+    fill_pick_up_location(driver, pick_up_location_input_value)
+
+    time.sleep(60)
+
+    driver.quit()
 
 
 def fill_pick_up_location(driver, input_value):

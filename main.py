@@ -1,10 +1,21 @@
 from thrifty.location import scrape_locations as scrape_locations_for_thrifty
+from thrifty.quote import scrape_quotes as scrape_quotes_for_thrifty
+
 from budget.location import scrape_locations as scrape_locations_for_budget
+from budget.quote import scrape_quotes as scrape_quotes_for_budget
+
 from gorentals.location import (
     scrape_locations as scrape_locations_for_gorentals,
 )
+from gorentals.quote import scrape_quotes as scrape_quotes_for_gorentals
+
 from db.location import save_locations
-from db.quote import add_todays_quote_scraping_task, get_pending_booking_requests
+from db.quote import (
+    add_todays_quote_scraping_task,
+    get_todays_booking_request_statistics,
+    get_todays_pending_booking_requests,
+)
+
 from utils.ui import (
     is_quit_command,
     create_option,
@@ -21,9 +32,19 @@ def scrape_locations(*args):
 
 def scrape_todays_rental_quotes(*args):
     task_id = add_todays_quote_scraping_task()
-    print("Today's quote scraping task id is: ", str(task_id))
-    get_pending_booking_requests()
-    pass
+    print("Today's quote scraping task[", task_id, "] has been created successfully.")
+
+    while True:
+        statistics = get_todays_booking_request_statistics()
+        print("Statistics: ", statistics)
+        if statistics["pending_count"] == 0:
+            break
+
+        pending_booking_requests = get_todays_pending_booking_requests()
+        for pending_booking_request in pending_booking_requests:
+            company_id = pending_booking_request["company_id"]
+            scrape_quotes_func = SCRAPE_QUOTES_FUNCS[str(company_id)]
+            scrape_quotes_func(pending_booking_request)
 
 
 COMMANDS = {
@@ -35,6 +56,12 @@ SCRAPE_LOCATIONS_FUNCS = {
     "1": scrape_locations_for_thrifty,
     "2": scrape_locations_for_budget,
     "3": scrape_locations_for_gorentals,
+}
+
+SCRAPE_QUOTES_FUNCS = {
+    "1": scrape_quotes_for_thrifty,
+    "2": scrape_quotes_for_budget,
+    "3": scrape_quotes_for_gorentals,
 }
 
 
