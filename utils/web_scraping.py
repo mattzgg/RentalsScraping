@@ -36,3 +36,7 @@ def is_mac_os():
 def open_link_in_new_tab(html_link):
     modifier_key = Keys.COMMAND if is_mac_os() else Keys.CONTROL
     html_link.send_keys(modifier_key, Keys.RETURN)
+
+
+def parse_rental_datetime(rental_datetime):
+    """parse a rental datetime string of format 16/10/2020 12:00 into an object"""

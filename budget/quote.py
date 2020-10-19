@@ -28,6 +28,15 @@ def scrape_quotes(booking_requests=[]):
     driver.quit()
 
 
+def __scrape_quotes_for_book_request(booking_request):
+    pick_up_location_input_value = booking_request["pick_up_location_input_value"]
+    drop_off_location_input_value = booking_request["drop_off_location_input_value"]
+    pick_up_date = booking_request["pick_up_date"]
+    pick_up_time = booking_request["pick_up_time"]
+    drop_off_date = booking_request["drop_off_date"]
+    drop_off_time = booking_request["drop_off_time"]
+
+
 def fill_pick_up_location(driver, input_value):
     # find the pick_up_location input
     try:

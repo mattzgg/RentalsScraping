@@ -34,21 +34,6 @@ def join_db_entity_ids(db_entity_ids, separator=","):
     return separator.join(str_ids)
 
 
-def parse_booking_request_template_configs_str(input_value):
-    config_regex = r"\((\d+)\s*,\s*(\d+)\)"
-    matches = re.findall(config_regex, input_value)
-    configs = []
-    for match in matches:
-        configs.append(
-            (
-                int(match[0]),  # Rental Route ID
-                int(match[1]),  # Rental Duration ID
-            )
-        )
-
-    return configs
-
-
 def is_quit_command(input_value):
     return input_value == "q"
 

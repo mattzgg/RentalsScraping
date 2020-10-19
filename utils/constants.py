@@ -17,4 +17,5 @@ RENTALS_SCRAPING_DB_CONNECTION_CONIFG = {
     "database": "rentals_scraping",
     "user": "admin",
     "password": "NRtf1zLWXJWdMj7mazKn",
+    "time_zone": "+13:00",
 }
