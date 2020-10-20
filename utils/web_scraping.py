@@ -1,8 +1,13 @@
 import time
 import random
 
-
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from utils import constants
 from utils.datatype import is_empty_string
 from sys import platform
 
@@ -38,5 +43,39 @@ def open_link_in_new_tab(html_link):
     html_link.send_keys(modifier_key, Keys.RETURN)
 
 
+def wait_element_until_present_by_css_selector(driver, timeout, css_selector):
+    try:
+        element = WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, css_selector))
+        )
+    except TimeoutException:
+        raise RuntimeError("Cannot find the element[" + css_selector + "] on the page.")
+    else:
+        return element
+
+
+def wait_element_until_present_by_xpath(driver, timeout, xpath):
+    try:
+        element = WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.XPATH, xpath))
+        )
+    except TimeoutException:
+        raise RuntimeError("Cannot find the element[" + xpath + "] on the page.")
+    else:
+        return element
+
+
+def focus_element(driver, element):
+    if element.tag_name == "input":
+        element.send_keys("")
+    else:
+        ActionChains(driver).moveToElement(element).perform()
+
+
 def parse_rental_datetime(rental_datetime):
     """parse a rental datetime string of format 16/10/2020 12:00 into an object"""
+
+
+def parse_date_text(date_text):
+    dmy = date_text.split("/")
+    return {"day": int(dmy[0]), "month": int(dmy[1]), "year": int(dmy[2])}
