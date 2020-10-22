@@ -17,3 +17,7 @@
 ## ERD
 
 ![ERD](./doc/mysql/model/ERD.png?raw=true "ERD")
+
+## DB Snapshot for Illustration
+
+![ERD](./doc/mysql/model/db_snapshot.png?raw=true "DB Snapshot for Illustration")
