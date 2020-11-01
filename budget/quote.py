@@ -46,13 +46,13 @@ def scrape_quotes(booking_request):
 
 def fill_location_input(driver, input_css_selector, input_value):
     location_input = wait_element_until_present_by_css_selector(
-        driver, constants.BUDGET_SCRAPE_QUOTES_TIMEOUT, input_css_selector
+        driver, constants.SCRAPE_TIMEOUT, input_css_selector
     )
     location_input.send_keys(input_value)
 
     try:
         suggested_location_element = WebDriverWait(
-            driver, constants.BUDGET_SCRAPE_QUOTES_TIMEOUT
+            driver, constants.SCRAPE_TIMEOUT
         ).until(presence_of_match_from_suggested_locations(input_value))
     except TimeoutException:
         raise RuntimeError(
@@ -83,7 +83,7 @@ class presence_of_match_from_suggested_locations:
 
 def click_select_my_vehicle_button(driver):
     select_my_vehicle_button = wait_element_until_present_by_css_selector(
-        driver, constants.BUDGET_SCRAPE_QUOTES_TIMEOUT, "#res-home-select-car"
+        driver, constants.SCRAPE_TIMEOUT, "#res-home-select-car"
     )
     select_my_vehicle_button.click()
 
@@ -105,7 +105,7 @@ def fill_date_input(driver, input_css_selector, input_value):
 
     # Open the date picker.
     date_input = wait_element_until_present_by_css_selector(
-        driver, constants.BUDGET_SCRAPE_QUOTES_TIMEOUT, input_css_selector
+        driver, constants.SCRAPE_TIMEOUT, input_css_selector
     )
     focus_element(driver, date_input)
 
@@ -114,13 +114,13 @@ def fill_date_input(driver, input_css_selector, input_value):
     # Calculate the parameters required to decide whether to adjust the date picker.
     left_month_year_label = wait_element_until_present_by_css_selector(
         driver,
-        constants.BUDGET_SCRAPE_QUOTES_TIMEOUT,
+        constants.SCRAPE_TIMEOUT,
         ".ui-datepicker-group-first .ui-datepicker-title",
     )
     left_month_year = parse_month_year_text(left_month_year_label.text)
     right_month_year_label = wait_element_until_present_by_css_selector(
         driver,
-        constants.BUDGET_SCRAPE_QUOTES_TIMEOUT,
+        constants.SCRAPE_TIMEOUT,
         ".ui-datepicker-group-last .ui-datepicker-title",
     )
     right_month_year = parse_month_year_text(right_month_year_label.text)
@@ -138,7 +138,7 @@ def fill_date_input(driver, input_css_selector, input_value):
         while prev_counter < step_count:
             prev_link = wait_element_until_present_by_css_selector(
                 driver,
-                constants.BUDGET_SCRAPE_QUOTES_TIMEOUT,
+                constants.SCRAPE_TIMEOUT,
                 ".ui-datepicker-prev",
             )
             prev_link.click()
@@ -149,7 +149,7 @@ def fill_date_input(driver, input_css_selector, input_value):
         while next_counter < step_count:
             next_link = wait_element_until_present_by_css_selector(
                 driver,
-                constants.BUDGET_SCRAPE_QUOTES_TIMEOUT,
+                constants.SCRAPE_TIMEOUT,
                 ".ui-datepicker-next",
             )
             next_link.click()
@@ -164,7 +164,7 @@ def fill_date_input(driver, input_css_selector, input_value):
             + "]/a"
         )
         day_link = wait_element_until_present_by_xpath(
-            driver, constants.BUDGET_SCRAPE_QUOTES_TIMEOUT, day_link_xpath
+            driver, constants.SCRAPE_TIMEOUT, day_link_xpath
         )
         day_link.click()
     elif right_difference >= 0:
@@ -174,7 +174,7 @@ def fill_date_input(driver, input_css_selector, input_value):
             + "]/a"
         )
         day_link = wait_element_until_present_by_xpath(
-            driver, constants.BUDGET_SCRAPE_QUOTES_TIMEOUT, day_link_xpath
+            driver, constants.SCRAPE_TIMEOUT, day_link_xpath
         )
         day_link.click()
 
@@ -183,7 +183,7 @@ def fill_time_input(driver, input_name, input_value):
     time_select_xpath = "//select[@name='" + input_name + "']"
     time_select = wait_element_until_present_by_xpath(
         driver,
-        constants.BUDGET_SCRAPE_QUOTES_TIMEOUT,
+        constants.SCRAPE_TIMEOUT,
         time_select_xpath,
     )
     time_select.click()
@@ -195,6 +195,6 @@ def fill_time_input(driver, input_name, input_value):
     input_value = input_value.lstrip("0")
     time_option_xpath = time_select_xpath + "[option='" + input_value + "']/option"
     time_option = wait_element_until_present_by_xpath(
-        driver, constants.BUDGET_SCRAPE_QUOTES_TIMEOUT, time_option_xpath
+        driver, constants.SCRAPE_TIMEOUT, time_option_xpath
     )
     time_option.click()

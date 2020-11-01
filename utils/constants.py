@@ -1,16 +1,16 @@
-FIND_ELEMENT_TIMEOUT = 30
+SCRAPE_TIMEOUT = 10  # seconds
 
 THRIFTY_COMPANY_ID = 1
-THRIFTY_LOCATIONS_PAGE_URL = ""
+THRIFTY_COMPANY_LOCATIONS_PAGE_URL = "https://www.thrifty.co.nz/locations/"
 
 BUDGET_COMPANY_ID = 2
 BUDGET_COMPANY_LOCATIONS_PAGE_URL = "https://www.budget.co.nz/en/locations/new-zealand"
-BUDGET_SCAPE_LOCATIONS_TIMEOUT = 10  # seconds
 BUDGET_BOOKING_PAGE_URL = "https://www.budget.co.nz/en/home"
-BUDGET_SCRAPE_QUOTES_TIMEOUT = 10  # seconds
 
 GORENTALS_COMPANY_ID = 3
-GORENTALS_LOCATIONS_PAGE_URL = ""
+GORENTALS_COMPANY_LOCATIONS_PAGE_URL = (
+    "https://www.gorentals.co.nz/rental-car-locations/"
+)
 
 RENTALS_SCRAPING_DB_CONNECTION_CONIFG = {
     "host": "stratford.cafcotgpxc6f.ap-southeast-2.rds.amazonaws.com",

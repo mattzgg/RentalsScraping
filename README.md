@@ -90,6 +90,7 @@ In summary, we have **3** companies, **1990** (729 + 1225 + 36) rental routes, *
 ## References
 
 -   https://selenium-python.readthedocs.io/
+-   [Beautiful Soup Documentation](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
 -   https://dev.mysql.com/doc/connector-python/en/
 -   https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 -   https://stackoverflow.com/questions/43164411/why-do-we-still-need-parser-like-beautifulsoup-if-we-can-use-selenium
