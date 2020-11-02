@@ -24,6 +24,18 @@ class html_input_has_value:
             return False
 
 
+class html_text_has_been_added:
+    def __init__(self, locator):
+        self.locator = locator
+
+    def __call__(self, driver):
+        element = driver.find_element(*self.locator)
+        if element and not is_empty_string(element.text):
+            return element
+        else:
+            return False
+
+
 def with_random_delay(func, min_delay=0, max_delay=5):
     def new_func(*args):
         result = func(*args)

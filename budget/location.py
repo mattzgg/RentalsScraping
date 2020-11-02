@@ -1,11 +1,8 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from bs4 import BeautifulSoup
 
 from utils import constants
 from utils.datatype import convert_tuple_to_dict
@@ -13,39 +10,34 @@ from utils.web_scraping import (
     html_input_has_value,
     with_random_delay,
     open_link_in_new_tab,
+    wait_element_until_present_by_css_selector,
 )
 
 
 def scrape_locations():
-    """Returns a list of location names scraped from the Budget's location page"""
+    """Returns a list of location objects scraped from the Budget's locations page.
+    A location object composes a name and an address.
+    """
     chrome_options = Options()
     # chrome_options.add_argument("--headless")
     driver = webdriver.Chrome(options=chrome_options)
     driver.get(constants.BUDGET_COMPANY_LOCATIONS_PAGE_URL)
 
     locations_container_css_selector = ".wl-location-state"
-
-    try:
-        locations_container = WebDriverWait(
-            driver, constants.BUDGET_SCAPE_LOCATIONS_TIMEOUT
-        ).until(
-            EC.presence_of_element_located(
-                (By.CSS_SELECTOR, locations_container_css_selector)
-            )
-        )
-    except TimeoutException:
-        raise RuntimeError("Cannot find locations on the page.")
+    locations_container = wait_element_until_present_by_css_selector(
+        driver,
+        constants.SCRAPE_TIMEOUT,
+        locations_container_css_selector,
+    )
 
     location_link_css_selector = locations_container_css_selector + " li a"
     location_links = driver.find_elements_by_css_selector(location_link_css_selector)
-    __scrape_location_input_value_enhanced = with_random_delay(
-        __scrape_location_input_value
-    )
+    __scrape_location_address_enhanced = with_random_delay(__scrape_location_address)
     locations = []
     for location_link in location_links:
         location = convert_tuple_to_dict(
-            __scrape_location_input_value_enhanced(driver, location_link),
-            ["name", "input_value"],
+            __scrape_location_address_enhanced(driver, location_link),
+            ["name", "address"],
         )
         locations.append(location)
 
@@ -54,7 +46,7 @@ def scrape_locations():
     return locations
 
 
-def __scrape_location_input_value(driver, location_link):
+def __scrape_location_address(driver, location_link):
     location_name = location_link.text
     current_window_handle = driver.current_window_handle
 
@@ -64,18 +56,18 @@ def __scrape_location_input_value(driver, location_link):
     driver.switch_to.window(new_window_handle)
 
     try:
-        pick_up_location_input = WebDriverWait(
-            driver, constants.BUDGET_SCAPE_LOCATIONS_TIMEOUT
-        ).until(html_input_has_value((By.CSS_SELECTOR, "#PicLoc_value")))
+        pick_up_location_input = WebDriverWait(driver, constants.SCRAPE_TIMEOUT).until(
+            html_input_has_value((By.CSS_SELECTOR, "#PicLoc_value"))
+        )
     except TimeoutException:
-        raise RuntimeError("Cannot find the pick-up location on the page.")
+        raise RuntimeError("Cannot find the pick-up location input on the page.")
 
-    location_input_value = pick_up_location_input.get_attribute("value")
+    location_address = pick_up_location_input.get_attribute("value")
 
     driver.close()
     driver.switch_to.window(current_window_handle)
 
     return (
         location_name,
-        location_input_value,
+        location_address,
     )
