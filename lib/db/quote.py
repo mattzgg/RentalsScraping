@@ -1,7 +1,7 @@
 import datetime
 
-from db.common import execute_query, execute_transaction
-from utils.datatype import convert_tuple_to_dict
+from .common import execute_query, execute_transaction
+from ..utils.datatype import convert_tuple_to_dict
 
 
 def add_todays_quote_scraping_task():

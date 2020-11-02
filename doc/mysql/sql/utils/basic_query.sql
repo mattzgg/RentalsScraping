@@ -4,9 +4,10 @@ select utc_timestamp();
 select now();
 select date_format(curdate(), '%d/%m/%Y %H:%i');
 
-select * from company;
+select * from company order by id;
 select * from company limit 0, 1;
 select * from location;
+select * from office;
 select * from raw_rental_route;
 select * from rental_route;
 select count(*) from rental_route;

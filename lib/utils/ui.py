@@ -1,7 +1,7 @@
 import re
 
 from termcolor import colored
-from utils.datatype import is_empty_string, is_tuple_or_list
+from .datatype import is_empty_string, is_tuple_or_list
 
 
 def is_valid_db_entity_id(input_value, valid_db_entity_ids=None):

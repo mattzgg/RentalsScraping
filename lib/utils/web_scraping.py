@@ -7,9 +7,9 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from utils import constants
-from utils.datatype import is_empty_string
 from sys import platform
+from . import constants
+from .datatype import is_empty_string
 
 
 class html_input_has_value:
@@ -55,10 +55,10 @@ def open_link_in_new_tab(html_link):
     html_link.send_keys(modifier_key, Keys.RETURN)
 
 
-def wait_element_until_present_by_css_selector(driver, timeout, css_selector):
+def wait_element_until_visible_by_css_selector(driver, timeout, css_selector):
     try:
         element = WebDriverWait(driver, timeout).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, css_selector))
+            EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector))
         )
     except TimeoutException:
         raise RuntimeError("Cannot find the element[" + css_selector + "] on the page.")
@@ -66,15 +66,39 @@ def wait_element_until_present_by_css_selector(driver, timeout, css_selector):
         return element
 
 
-def wait_element_until_present_by_xpath(driver, timeout, xpath):
+def wait_elements_until_visible_by_css_selector(driver, timeout, css_selector):
+    try:
+        elements = WebDriverWait(driver, timeout).until(
+            EC.visibility_of_all_elements_located((By.CSS_SELECTOR, css_selector))
+        )
+    except TimeoutException:
+        raise RuntimeError(
+            "Cannot find the elements[" + css_selector + "] on the page."
+        )
+    else:
+        return elements
+
+
+def wait_element_until_visible_by_xpath(driver, timeout, xpath):
     try:
         element = WebDriverWait(driver, timeout).until(
-            EC.presence_of_element_located((By.XPATH, xpath))
+            EC.visibility_of_element_located((By.XPATH, xpath))
         )
     except TimeoutException:
         raise RuntimeError("Cannot find the element[" + xpath + "] on the page.")
     else:
         return element
+
+
+def wait_elements_until_visible_by_xpath(driver, timeout, xpath):
+    try:
+        elements = WebDriverWait(driver, timeout).until(
+            EC.visibility_of_all_elements_located((By.XPATH, xpath))
+        )
+    except TimeoutException:
+        raise RuntimeError("Cannot find the elements[" + xpath + "] on the page.")
+    else:
+        return elements
 
 
 def focus_element(driver, element):

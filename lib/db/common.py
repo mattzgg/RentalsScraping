@@ -1,5 +1,5 @@
 from mysql import connector
-from utils import constants
+from ..utils import constants
 
 
 def get_db_connection():
