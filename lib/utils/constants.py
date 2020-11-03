@@ -1,4 +1,5 @@
 SCRAPE_TIMEOUT = 10  # seconds
+SQL_SELECT_LIMIT_ROW_COUNT = 1000
 
 THRIFTY_COMPANY_ID = 1
 THRIFTY_COMPANY_LOCATIONS_PAGE_URL = "https://www.thrifty.co.nz/locations/"

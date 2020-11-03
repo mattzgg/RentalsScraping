@@ -16,13 +16,17 @@ from ..utils.web_scraping import (
 )
 
 
-def scrape_quotes(booking_request):
-    pick_up_location_input_value = booking_request["pick_up_location_input_value"]
-    drop_off_location_input_value = booking_request["drop_off_location_input_value"]
-    pick_up_date = booking_request["pick_up_date"]
-    pick_up_time = booking_request["pick_up_time"]
-    drop_off_date = booking_request["drop_off_date"]
-    drop_off_time = booking_request["drop_off_time"]
+def scrape_quotes(non_fulfilled_booking_request):
+    pick_up_location_input_value = non_fulfilled_booking_request[
+        "pick_up_location_input_value"
+    ]
+    drop_off_location_input_value = non_fulfilled_booking_request[
+        "drop_off_location_input_value"
+    ]
+    pick_up_date = non_fulfilled_booking_request["pick_up_date"]
+    pick_up_time = non_fulfilled_booking_request["pick_up_time"]
+    drop_off_date = non_fulfilled_booking_request["drop_off_date"]
+    drop_off_time = non_fulfilled_booking_request["drop_off_time"]
 
     chrome_options = Options()
     # chrome_options.add_argument("--headless")

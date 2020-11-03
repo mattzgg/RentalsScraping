@@ -1,14 +1,12 @@
-from pathlib import Path
-import sys
+import import_lib
+from lib.thrifty.location import scrape_offices as scrape_offices_from_thrifty
+from lib.budget.location import scrape_offices as scrape_offices_from_budget
+from lib.gorentals.location import scrape_offices as scrape_offices_from_gorentals
+from lib.db.location import add_offices, refresh_rental_routes
+from lib.utils import constants
 
 
 def main():
-    from lib.thrifty.location import scrape_offices as scrape_offices_from_thrifty
-    from lib.budget.location import scrape_offices as scrape_offices_from_budget
-    from lib.gorentals.location import scrape_offices as scrape_offices_from_gorentals
-    from lib.db.location import add_offices, refresh_rental_routes
-    from lib.utils import constants
-
     print("Start to handle Thrifty's offices.")
     thrifty_offices = scrape_offices_from_thrifty()
     add_offices(constants.THRIFTY_COMPANY_ID, thrifty_offices)
@@ -30,7 +28,4 @@ def main():
 
 
 if __name__ == "__main__":
-    my_path = Path(__file__)
-    lib_path = str(my_path.parent.parent)
-    sys.path.append(lib_path)
     main()

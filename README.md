@@ -4,6 +4,7 @@
 
 -   pip install termcolor
 -   pip install mysql-connector-python
+-   python -m pip install git+https://github.com/verigak/progress.git@ca6310204e397999ac61ad69f8fba6a7fc775069
 
 ## Concepts
 
@@ -79,13 +80,13 @@ insert into pick_up_time(id, value) values(2, sec_to_time(13*60*60)); -- 01:00 P
 
 ## Analysis of Number of Booking Requests for a Designated Date
 
-For **Thrifty**, it has **27** locations, namely **729** (27 \* 27) rental routes. There are **7290** (729 \* 1 \* 2 \* 5) booking requests. Each booking request could bring around **10** rental quotes. So the total of rental quotes could be around **72900** (7290 \* 10).
+For **Thrifty**, it has **28** locations, namely **784** (28 \* 28) rental routes. There are **7840** (784 \* 1 \* 2 \* 5) booking requests. Each booking request could bring around **10** rental quotes. So the total of rental quotes could be around **78400** (7840 \* 10).
 
 For **Budget**, it has **35** locations, namely **1225** (35 \* 35) rental routes. There are **12250** (729 \* 1 \* 2 \* 5) booking requests. Each booking request could bring around **10** rental quotes. So the total of rental quotes could be around **122500** (12250 \* 10).
 
 For **GO Rentals**, it has **6** locations, namely **36** (6 \* 6) rental routes. There are **360** (36 \* 1 \* 2 \* 5) booking requests. Each booking request could bring around **20** rental quotes. So the total of rental quotes could be around **7200** (360 \* 20).
 
-In summary, we have **3** companies, **1990** (729 + 1225 + 36) rental routes, **19900** (7290 + 12250 + 360) booking requests and collect around **202600** (72900 + 122500 + 7200) rental quotes.
+In summary, we have **3** companies, **2045** (784 + 1225 + 36) rental routes, **20450** (7840 + 12250 + 360) booking requests and collect around **204500** (78400 + 122500 + 7200) rental quotes.
 
 ## References
 

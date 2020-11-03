@@ -1,104 +1,76 @@
-from thrifty.location import scrape_locations as scrape_locations_for_thrifty
-from thrifty.quote import scrape_quotes as scrape_quotes_for_thrifty
-
-from budget.location import scrape_locations as scrape_locations_for_budget
-from budget.quote import scrape_quotes as scrape_quotes_for_budget
-
-from gorentals.location import (
-    scrape_locations as scrape_locations_for_gorentals,
+import import_lib
+import time
+from datetime import datetime
+from progress.bar import ChargingBar
+from lib.utils import constants
+from lib.utils.web_scraping import time_until_end_of_day
+from lib.db.quote import (
+    get_booking_request_statistics,
+    get_non_fulfilled_booking_requests,
 )
-from gorentals.quote import scrape_quotes as scrape_quotes_for_gorentals
+from lib.thrifty.quote import scrape_quotes as scrape_quotes_from_thrifty
+from lib.budget.quote import scrape_quotes as scrape_quotes_from_budget
+from lib.gorentals.quote import scrape_quotes as scrape_quotes_from_gorentals
 
-from db.location import save_locations
-from db.quote import (
-    add_todays_quote_scraping_task,
-    get_todays_booking_request_statistics,
-    get_todays_pending_booking_requests,
+SCRAPE_QUOTES_FUNCS = dict(
+    [
+        (
+            constants.THRIFTY_COMPANY_ID,
+            scrape_quotes_from_thrifty,
+        ),
+        (
+            constants.BUDGET_COMPANY_ID,
+            scrape_quotes_from_budget,
+        ),
+        (
+            constants.GORENTALS_COMPANY_ID,
+            scrape_quotes_from_gorentals,
+        ),
+    ]
 )
 
-from utils.ui import (
-    is_quit_command,
-    create_option,
-    create_warning,
-)
+
+def wait_until_tomorrow():
+    time_until_today = time_until_end_of_day()
+    time.sleep(time_until_today)
 
 
-def scrape_locations(*args):
-    company_id = args[0]
-    scrape_locations_func = SCRAPE_LOCATIONS_FUNCS[company_id]
-    locations = scrape_locations_func()
-    save_locations(int(company_id), locations)
-
-
-def scrape_todays_rental_quotes(*args):
-    task_id = add_todays_quote_scraping_task()
-    print("Today's quote scraping task[", task_id, "] has been created successfully.")
-
+def main():
     while True:
-        statistics = get_todays_booking_request_statistics()
-        print("Statistics: ", statistics)
-        if statistics["pending_count"] == 0:
-            break
+        scraping_date_str = datetime.today().strftime("%d/%m/%Y")
+        booking_request_statistics = get_booking_request_statistics(scraping_date_str)
+        total_count = booking_request_statistics["total_count"]
+        fulfilled_count = booking_request_statistics["fulfilled_count"]
+        if fulfilled_count == total_count:
+            wait_until_tomorrow()
+            continue
 
-        pending_booking_requests = get_todays_pending_booking_requests()
-        for pending_booking_request in pending_booking_requests:
-            company_id = pending_booking_request["company_id"]
-            scrape_quotes_func = SCRAPE_QUOTES_FUNCS[str(company_id)]
-            scrape_quotes_func(pending_booking_request)
+        progress_bar = ChargingBar(
+            "Scraping quotes",
+            max=total_count,
+            color="green",
+            suffix="%(percent)d%%, %(index)d/%(max)d, %(elapsed_td)s",
+        )
+        progress_bar.goto(fulfilled_count)
+        offset = 0
+        while True:
+            non_fulfilled_booking_requests = get_non_fulfilled_booking_requests(
+                scraping_date_str, offset, constants.SQL_SELECT_LIMIT_ROW_COUNT
+            )
 
+            # There is no more non-fulfilled booking requests.
+            if len(non_fulfilled_booking_requests) == 0:
+                progress_bar.finish()
+                break
 
-COMMANDS = {
-    "1": scrape_locations,
-    "2": scrape_todays_rental_quotes,
-}
+            for non_fulfilled_booking_request in non_fulfilled_booking_requests:
+                company_id = non_fulfilled_booking_request["company_id"]
+                scrape_quotes_func = SCRAPE_QUOTES_FUNCS[company_id]
+                scrape_quotes_func(non_fulfilled_booking_request)
+                progress_bar.next()
 
-SCRAPE_LOCATIONS_FUNCS = {
-    "1": scrape_locations_for_thrifty,
-    "2": scrape_locations_for_budget,
-    "3": scrape_locations_for_gorentals,
-}
-
-SCRAPE_QUOTES_FUNCS = {
-    "1": scrape_quotes_for_thrifty,
-    "2": scrape_quotes_for_budget,
-    "3": scrape_quotes_for_gorentals,
-}
-
-
-def execute_command(command):
-    item_count = len(command)
-    command_id = command[0]
-    command_args = [] if item_count == 1 else command[1:item_count]
-    command_func = COMMANDS[command_id]
-    command_func(*command_args)
+            offset += constants.SQL_SELECT_LIMIT_ROW_COUNT
 
 
-def prompt_locations_scraping():
-    print("The following companies provide rental locations:")
-    print(create_option("[1] Thrifty"))
-    print(create_option("[2] Budget"))
-    print(create_option("[3] GO Rentals"))
-    choice = input("Please input the company ID: ")
-    if is_quit_command(choice):
-        return
-    elif choice in (
-        "1",
-        "2",
-        "3",
-    ):
-        execute_command(["1", choice])
-        return
-
-
-while True:
-    print("Welcome to RentalsScraping!")
-    print("Anytime you want to quit the current operation, please input 'q'.")
-    print(create_option("[1] Scrape rental locations"))
-    print(create_option("[2] Scrape today's rental quotes"))
-    choice = input("Please input the command ID: ")
-    if choice == "q":
-        break
-    elif choice == "1":
-        prompt_locations_scraping()
-    elif choice == "2":
-        execute_command(["2"])
+if __name__ == "__main__":
+    main()

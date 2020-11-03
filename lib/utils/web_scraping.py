@@ -1,6 +1,7 @@
 import time
 import random
 
+from datetime import datetime
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -115,3 +116,12 @@ def parse_rental_datetime(rental_datetime):
 def parse_date_text(date_text):
     dmy = date_text.split("/")
     return {"day": int(dmy[0]), "month": int(dmy[1]), "year": int(dmy[2])}
+
+
+def time_until_end_of_day(dt=None):
+    """Get timedelta in seconds until end of day on the datetime passed, or current time."""
+    if df is None:
+        dt = datetime.now()
+    return (
+        ((24 - dt.hour - 1) * 60 * 60) + ((60 - dt.minute - 1) * 60) + (60 - dt.second)
+    )
