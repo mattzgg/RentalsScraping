@@ -109,18 +109,17 @@ def focus_element(driver, element):
         ActionChains(driver).moveToElement(element).perform()
 
 
-def parse_rental_datetime(rental_datetime):
-    """parse a rental datetime string of format 16/10/2020 12:00 into an object"""
-
-
 def parse_date_text(date_text):
+    """Parse a date string with format %d/%m/%Y to a dictionary of day, month and year,
+    e.g., parse '04/11/2020' to {"day": 4, "month": 11, "year": 2020}
+    """
     dmy = date_text.split("/")
     return {"day": int(dmy[0]), "month": int(dmy[1]), "year": int(dmy[2])}
 
 
 def time_until_end_of_day(dt=None):
     """Get timedelta in seconds until end of day on the datetime passed, or current time."""
-    if df is None:
+    if dt is None:
         dt = datetime.now()
     return (
         ((24 - dt.hour - 1) * 60 * 60) + ((60 - dt.minute - 1) * 60) + (60 - dt.second)
