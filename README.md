@@ -8,7 +8,7 @@
 
 ## Concepts
 
--   A **Rental Route** is defined as a pair of locations. One represents the pick-up location and the other represents the drop-off location. Each car rental company offers customers a number of rental routes. 
+-   A **Rental Route** is defined as a pair of locations. One represents the pick-up location and the other represents the drop-off location. Each car rental company offers customers a number of rental routes.
 -   A **Rental Duration** represents the number of rental days.
 -   A **Booking Request** is an object which encapsulates a query condtion required to operate on a car rental company's website to get rental quotes. It consists of a company, a pick-up location, a pick-up date, a pick-up time, a drop-off location, a drop-off date and a drop-off time. For a designated date, the pick-up date is the day next to it and its booking requests are definite.
 -   A **Fulfilled Booking Request** is a booking request whose corresponding rental quotes have been scraped and saved to the database.
@@ -43,12 +43,12 @@
 
 ## Database Procedures
 
-[add_office](./doc/mysql/model/procedure/add_office.md)
-[debug_msg](./doc/mysql/model/procedure/debug_msg.md)
-[get_booking_request_statistics](./doc/mysql/model/procedure/get_booking_request_statistics.md)
-[get_location_name](./doc/mysql/model/procedure/get_location_name.md)
-[get_non_fulfilled_booking_requests](./doc/mysql/model/procedure/get_non_fulfilled_booking_requests.md)
-[refresh_rental_routes](./doc/mysql/model/procedure/refresh_rental_routes.md)
+-   [add_office](./doc/mysql/model/procedure/add_office.md)
+-   [debug_msg](./doc/mysql/model/procedure/debug_msg.md)
+-   [get_booking_request_statistics](./doc/mysql/model/procedure/get_booking_request_statistics.md)
+-   [get_location_name](./doc/mysql/model/procedure/get_location_name.md)
+-   [get_non_fulfilled_booking_requests](./doc/mysql/model/procedure/get_non_fulfilled_booking_requests.md)
+-   [refresh_rental_routes](./doc/mysql/model/procedure/refresh_rental_routes.md)
 
 ## Database Functions
 
