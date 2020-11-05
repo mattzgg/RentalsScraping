@@ -17,16 +17,19 @@ from ..utils.web_scraping import (
 
 
 def scrape_quotes(non_fulfilled_booking_request):
-    pick_up_location_input_value = non_fulfilled_booking_request[
-        "pick_up_location_input_value"
-    ]
-    drop_off_location_input_value = non_fulfilled_booking_request[
-        "drop_off_location_input_value"
-    ]
-    pick_up_date = non_fulfilled_booking_request["pick_up_date"]
-    pick_up_time = non_fulfilled_booking_request["pick_up_time"]
-    drop_off_date = non_fulfilled_booking_request["drop_off_date"]
-    drop_off_time = non_fulfilled_booking_request["drop_off_time"]
+    company_id = non_fulfilled_booking_request["company_id"]
+    rental_route_id = non_fulfilled_booking_request["rental_route_id"]
+    pick_up_date_id = non_fulfilled_booking_request["pick_up_date_id"]
+    pick_up_time_id = non_fulfilled_booking_request["pick_up_time_id"]
+    rental_duration_id = non_fulfilled_booking_request["rental_duration_id"]
+    pick_up_office_name = non_fulfilled_booking_request["pick_up_office_name"]
+    pick_up_office_address = non_fulfilled_booking_request["pick_up_office_address"]
+    drop_off_office_name = non_fulfilled_booking_request["drop_off_office_name"]
+    drop_off_office_address = non_fulfilled_booking_request["drop_off_office_address"]
+    pick_up_date_value = non_fulfilled_booking_request["pick_up_date_value"]
+    pick_up_time_value = non_fulfilled_booking_request["pick_up_time_value"]
+    drop_off_date_value = non_fulfilled_booking_request["drop_off_date_value"]
+    drop_off_time_value = non_fulfilled_booking_request["drop_off_time_value"]
 
     chrome_options = Options()
     # chrome_options.add_argument("--headless")
@@ -34,16 +37,14 @@ def scrape_quotes(non_fulfilled_booking_request):
     driver.maximize_window()
     driver.get(constants.BUDGET_BOOKING_PAGE_URL)
 
-    fill_location_input(driver, "#PicLoc_value", pick_up_location_input_value)
-    fill_location_input(driver, "#DropLoc_value", drop_off_location_input_value)
-    fill_date_input(driver, "#from", pick_up_date)
-    fill_time_input(driver, "reservationModel.pickUpTime", pick_up_time)
-    fill_date_input(driver, "#to", drop_off_date)
-    fill_time_input(driver, "reservationModel.dropTime", drop_off_time)
+    fill_location_input(driver, "#PicLoc_value", pick_up_office_address)
+    fill_location_input(driver, "#DropLoc_value", drop_off_office_address)
+    fill_date_input(driver, "#from", pick_up_date_value)
+    fill_time_input(driver, "reservationModel.pickUpTime", pick_up_time_value)
+    fill_date_input(driver, "#to", drop_off_date_value)
+    fill_time_input(driver, "reservationModel.dropTime", drop_off_time_value)
 
-    # click_select_my_vehicle_button(driver)
-
-    time.sleep(60)
+    click_select_my_vehicle_button(driver)
 
     driver.quit()
 
@@ -197,7 +198,7 @@ def fill_time_input(driver, input_name, input_value):
     elif input_value == "12:00 PM":
         input_value = "noon"
     input_value = input_value.lstrip("0")
-    time_option_xpath = time_select_xpath + "[option='" + input_value + "']/option"
+    time_option_xpath = time_select_xpath + "/option[@label='" + input_value + "']"
     time_option = wait_element_until_visible_by_xpath(
         driver, constants.SCRAPE_TIMEOUT, time_option_xpath
     )

@@ -2,8 +2,10 @@ from mysql import connector
 from ..utils import constants
 
 
-def get_db_connection():
-    return connector.connect(**constants.RENTALS_SCRAPING_DB_CONNECTION_CONIFG)
+def get_db_connection(autocommit=True):
+    cnx = connector.connect(**constants.RENTALS_SCRAPING_DB_CONNECTION_CONIFG)
+    cnx.autocommit = autocommit
+    return cnx
 
 
 def execute_query(invoke_cursor_func):
