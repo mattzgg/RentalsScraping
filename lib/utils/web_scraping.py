@@ -1,8 +1,9 @@
 import time
 import random
+import re
 
 from datetime import datetime
-from selenium.common.exceptions import TimeoutException
+from decimal import Decimal
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -57,14 +58,9 @@ def open_link_in_new_tab(html_link):
 
 
 def wait_element_until_visible_by_css_selector(driver, timeout, css_selector):
-    try:
-        element = WebDriverWait(driver, timeout).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector))
-        )
-    except TimeoutException:
-        raise RuntimeError("Cannot find the element[" + css_selector + "] on the page.")
-    else:
-        return element
+    return WebDriverWait(driver, timeout).until(
+        EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector))
+    )
 
 def wait_element_until_visible_by_id (driver, timeout, id):
     try:
@@ -77,38 +73,21 @@ def wait_element_until_visible_by_id (driver, timeout, id):
         return element
 
 def wait_elements_until_visible_by_css_selector(driver, timeout, css_selector):
-    try:
-        elements = WebDriverWait(driver, timeout).until(
-            EC.visibility_of_all_elements_located((By.CSS_SELECTOR, css_selector))
-        )
-    except TimeoutException:
-        raise RuntimeError(
-            "Cannot find the elements[" + css_selector + "] on the page."
-        )
-    else:
-        return elements
+    return WebDriverWait(driver, timeout).until(
+        EC.visibility_of_all_elements_located((By.CSS_SELECTOR, css_selector))
+    )
 
 
 def wait_element_until_visible_by_xpath(driver, timeout, xpath):
-    try:
-        element = WebDriverWait(driver, timeout).until(
-            EC.visibility_of_element_located((By.XPATH, xpath))
-        )
-    except TimeoutException:
-        raise RuntimeError("Cannot find the element[" + xpath + "] on the page.")
-    else:
-        return element
+    return WebDriverWait(driver, timeout).until(
+        EC.visibility_of_element_located((By.XPATH, xpath))
+    )
 
 
 def wait_elements_until_visible_by_xpath(driver, timeout, xpath):
-    try:
-        elements = WebDriverWait(driver, timeout).until(
-            EC.visibility_of_all_elements_located((By.XPATH, xpath))
-        )
-    except TimeoutException:
-        raise RuntimeError("Cannot find the elements[" + xpath + "] on the page.")
-    else:
-        return elements
+    return WebDriverWait(driver, timeout).until(
+        EC.visibility_of_all_elements_located((By.XPATH, xpath))
+    )
 
 
 def focus_element(driver, element):
@@ -133,3 +112,15 @@ def time_until_end_of_day(dt=None):
     return (
         ((24 - dt.hour - 1) * 60 * 60) + ((60 - dt.minute - 1) * 60) + (60 - dt.second)
     )
+
+
+def extract_price(quote_text):
+    price = 0
+
+    pattern = re.compile("\d+\.\d{2}")
+    match_object = pattern.search(quote_text)
+    if match_object:
+        price_text = match_object.group(0)
+        price = Decimal(price_text)
+
+    return price

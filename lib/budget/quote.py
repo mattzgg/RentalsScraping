@@ -1,4 +1,4 @@
-import time
+import pprint
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -10,68 +10,91 @@ from selenium.webdriver.common.by import By
 from ..utils import constants
 from ..utils.web_scraping import (
     wait_element_until_visible_by_css_selector,
+    wait_elements_until_visible_by_css_selector,
     wait_element_until_visible_by_xpath,
     focus_element,
     parse_date_text,
+    extract_price,
 )
+from ..utils.ui import create_warning, create_error
 
 
 def scrape_quotes(non_fulfilled_booking_request):
-    company_id = non_fulfilled_booking_request["company_id"]
-    rental_route_id = non_fulfilled_booking_request["rental_route_id"]
-    pick_up_date_id = non_fulfilled_booking_request["pick_up_date_id"]
-    pick_up_time_id = non_fulfilled_booking_request["pick_up_time_id"]
-    rental_duration_id = non_fulfilled_booking_request["rental_duration_id"]
-    pick_up_office_name = non_fulfilled_booking_request["pick_up_office_name"]
-    pick_up_office_address = non_fulfilled_booking_request["pick_up_office_address"]
-    drop_off_office_name = non_fulfilled_booking_request["drop_off_office_name"]
-    drop_off_office_address = non_fulfilled_booking_request["drop_off_office_address"]
-    pick_up_date_value = non_fulfilled_booking_request["pick_up_date_value"]
-    pick_up_time_value = non_fulfilled_booking_request["pick_up_time_value"]
-    drop_off_date_value = non_fulfilled_booking_request["drop_off_date_value"]
-    drop_off_time_value = non_fulfilled_booking_request["drop_off_time_value"]
+    driver = None
+    quotes = []
 
-    chrome_options = Options()
-    # chrome_options.add_argument("--headless")
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.maximize_window()
-    driver.get(constants.BUDGET_BOOKING_PAGE_URL)
+    try:
+        pick_up_office_name = non_fulfilled_booking_request["pick_up_office_name"]
+        pick_up_office_address = non_fulfilled_booking_request["pick_up_office_address"]
+        drop_off_office_name = non_fulfilled_booking_request["drop_off_office_name"]
+        drop_off_office_address = non_fulfilled_booking_request[
+            "drop_off_office_address"
+        ]
+        pick_up_date_value = non_fulfilled_booking_request["pick_up_date_value"]
+        pick_up_time_value = non_fulfilled_booking_request["pick_up_time_value"]
+        drop_off_date_value = non_fulfilled_booking_request["drop_off_date_value"]
+        drop_off_time_value = non_fulfilled_booking_request["drop_off_time_value"]
 
-    fill_location_input(driver, "#PicLoc_value", pick_up_office_address)
-    fill_location_input(driver, "#DropLoc_value", drop_off_office_address)
-    fill_date_input(driver, "#from", pick_up_date_value)
-    fill_time_input(driver, "reservationModel.pickUpTime", pick_up_time_value)
-    fill_date_input(driver, "#to", drop_off_date_value)
-    fill_time_input(driver, "reservationModel.dropTime", drop_off_time_value)
+        chrome_options = Options()
+        if constants.IS_CHROME_HEADLESS_ENABLED:
+            chrome_options.add_argument("--headless")
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.maximize_window()
+        driver.get(constants.BUDGET_BOOKING_PAGE_URL)
 
-    click_select_my_vehicle_button(driver)
+        __fill_location_input(
+            driver, "#PicLoc_value", pick_up_office_name, pick_up_office_address
+        )
+        __fill_location_input(
+            driver, "#DropLoc_value", drop_off_office_name, drop_off_office_address
+        )
+        __fill_date_input(driver, "#from", pick_up_date_value)
+        __fill_time_input(driver, "reservationModel.pickUpTime", pick_up_time_value)
+        __fill_date_input(driver, "#to", drop_off_date_value)
+        __fill_time_input(driver, "reservationModel.dropTime", drop_off_time_value)
 
-    driver.quit()
+        __click_select_my_vehicle_button(driver)
+
+        try:
+            quotes = __scrape_quotes_on_page(driver)
+        except TimeoutException as exception:
+            warning = create_warning(
+                "\nNo quotes were found for the non-fulfilled booking request:\n{}".format(
+                    pprint.pformat(non_fulfilled_booking_request)
+                )
+            )
+            print(warning)
+    finally:
+        if driver:
+            driver.quit()
+
+    return quotes
 
 
-def fill_location_input(driver, input_css_selector, input_value):
+def __fill_location_input(driver, input_css_selector, office_name, office_address):
     location_input = wait_element_until_visible_by_css_selector(
         driver, constants.SCRAPE_TIMEOUT, input_css_selector
     )
-    location_input.send_keys(input_value)
+    location_input_value = constants.BUDGET_LOCATION_INPUT_VALUE_DICT[office_name]
+    location_input.send_keys(location_input_value)
 
     try:
         suggested_location_element = WebDriverWait(
             driver, constants.SCRAPE_TIMEOUT
-        ).until(presence_of_match_from_suggested_locations(input_value))
+        ).until(presence_of_match_from_suggested_locations(office_address))
     except TimeoutException:
-        raise RuntimeError(
-            "Cannot find suggested location for the location input["
-            + input_css_selector
-            + "] on the page."
+        raise Exception(
+            "Budget > Fill location input '{}': No suggestion found for '{}/{}'".format(
+                input_css_selector, office_name, office_address
+            )
         )
     else:
         suggested_location_element.click()
 
 
 class presence_of_match_from_suggested_locations:
-    def __init__(self, input_value):
-        self.input_value = input_value
+    def __init__(self, office_address):
+        self.office_address = office_address
 
     def __call__(self, driver):
         suggested_locations = driver.find_elements(
@@ -79,21 +102,21 @@ class presence_of_match_from_suggested_locations:
         )
         if suggested_locations:
             for suggested_location in suggested_locations:
-                if suggested_location.text == self.input_value:
+                if suggested_location.text == self.office_address:
                     return suggested_location
             return False
         else:
             return False
 
 
-def click_select_my_vehicle_button(driver):
+def __click_select_my_vehicle_button(driver):
     select_my_vehicle_button = wait_element_until_visible_by_css_selector(
         driver, constants.SCRAPE_TIMEOUT, "#res-home-select-car"
     )
     select_my_vehicle_button.click()
 
 
-def fill_date_input(driver, input_css_selector, input_value):
+def __fill_date_input(driver, input_css_selector, input_value):
     def parse_month_year_text(month_year_text):
         items = month_year_text.split(" ")
         month_text = items[0]
@@ -184,7 +207,7 @@ def fill_date_input(driver, input_css_selector, input_value):
         day_link.click()
 
 
-def fill_time_input(driver, input_name, input_value):
+def __fill_time_input(driver, input_name, input_value):
     time_select_xpath = "//select[@name='" + input_name + "']"
     time_select = wait_element_until_visible_by_xpath(
         driver,
@@ -203,3 +226,41 @@ def fill_time_input(driver, input_name, input_value):
         driver, constants.SCRAPE_TIMEOUT, time_option_xpath
     )
     time_option.click()
+
+
+def __scrape_quotes_on_page(driver):
+    vehicle_category_list = wait_elements_until_visible_by_css_selector(
+        driver,
+        constants.SCRAPE_TIMEOUT,
+        ".avilablecar.available-car-box .avilcardtl h3",
+    )
+    vehicle_price_list = wait_elements_until_visible_by_css_selector(
+        driver,
+        constants.SCRAPE_TIMEOUT,
+        ".avilablecar.available-car-box .payamntr price",
+    )
+    vehicle_category_count = len(vehicle_category_list)
+    vehicle_price_count = len(vehicle_price_list)
+    # Some vehicles show without a price.
+    assert vehicle_category_count >= vehicle_price_count
+
+    quotes = []
+    index = 0
+    for vehicle_category in vehicle_category_list:
+        if index == vehicle_price_count:
+            break
+
+        vehicle_price = vehicle_price_list[index]
+        vehicle_price_decimal = extract_price(vehicle_price.text)
+        # For Budget, vehicle category description and vehicle age description are optional
+        quotes.append(
+            {
+                "vehicle_category_name_in_company": vehicle_category.text,
+                "vehicle_category_description": "",
+                "vehicle_age_description": "",
+                "price": vehicle_price_decimal,
+            }
+        )
+        index = index + 1
+
+    return quotes

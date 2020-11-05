@@ -1,5 +1,6 @@
-SCRAPE_TIMEOUT = 30  # seconds
+SCRAPE_TIMEOUT = 10  # seconds
 SQL_SELECT_LIMIT_ROW_COUNT = 1000
+IS_CHROME_HEADLESS_ENABLED = True
 
 THRIFTY_COMPANY_ID = 1
 THRIFTY_COMPANY_LOCATIONS_PAGE_URL = "https://www.thrifty.co.nz/locations/"
@@ -33,4 +34,43 @@ MONTHS = {
     "OCTOBER": 10,
     "NOVEMBER": 11,
     "DECEMBER": 12,
+}
+
+# The dictionary's key is office name, value is input value for pick-up and drop-off locations.
+BUDGET_LOCATION_INPUT_VALUE_DICT = {
+    "Auckland Airport": "Auckland",
+    "Auckland Penrose": "Auckland",
+    "Auckland Downtown": "Auckland",
+    "Auckland North Shore": "Auckland",
+    "Blenheim Airport": "Blenheim",
+    "Christchurch Airport": "Christchurch",
+    "Christchurch Downtown": "Christchurch",
+    "Christchurch Sheffield Crescent": "Christchurch",
+    "Dunedin Airport": "Dunedin",
+    "Dunedin Downtown": "Dunedin",
+    "Gisborne Airport": "Gisborne",
+    "Greymouth Railway Station": "Greymouth",
+    "Hamilton Airport": "Hamilton",
+    "Hamilton Downtown": "Hamilton",
+    "Hokitika Airport": "Hokitika",
+    "Invercargill Airport": "Invercargill",
+    "Kerikeri Airport": "Kerikeri",
+    "Napier Airport": "Napier",
+    "Nelson Airport": "Nelson",
+    "New Plymouth Airport": "New Plymouth",
+    "New Plymouth Downtown": "New Plymouth",
+    "Palmerston North Airport": "Palmerston North",
+    "Picton Ferry Terminal": "Picton",
+    "Queenstown Airport": "Queenstown",
+    "Queenstown Downtown": "Queenstown",
+    "Rotorua Airport": "Rotorua",
+    "Rotorua Downtown": "Rotorua",
+    "Taupo Airport": "Taupo",
+    "Taupo Downtown": "Taupo",
+    "Tauranga Airport": "Tauranga",
+    "Wellington Airport": "Wellington",
+    "Wellington Ferry Terminal": "Wellington",
+    "Wellington Downtown": "Wellington",
+    "Petone Lower Hutt": "Petone Lower Hutt",
+    "Whangarei Airport": "Whangarei",
 }

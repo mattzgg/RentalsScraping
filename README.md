@@ -33,55 +33,31 @@
 
 ![ERD](./doc/mysql/model/ERD.png?raw=true)
 
-## The SQL code to create the **company_rental_route** view
+## Vehicle Category Sort
 
-```sql
-CREATE VIEW `company_rental_route` AS
-    SELECT
-        pick_up_office.company_id,
-        rental_route.id rental_route_id,
-        pick_up_office.location_id pick_up_location_id,
-        pick_up_loaction.name pick_up_location_name,
-        pick_up_office.address pick_up_location_address,
-        drop_off_office.location_id drop_off_location_id,
-        drop_off_location.name drop_off_location_name,
-        drop_off_office.address drop_off_location_address
-    FROM
-        office pick_up_office,
-        office drop_off_office,
-        rental_route,
-        location pick_up_location,
-        location drop_off_location
-    WHERE
-        pick_up_office.company_id = drop_off_office.company_id
-            AND pick_up_office.location_id = rental_route.pick_up_location_id
-            AND drop_off_office.location_id = rental_route.drop_off_location_id
-            AND rental_route.pick_up_location_id = pick_up_location.id
-            AND rental_route.drop_off_location_id = drop_off_location.id
-```
+[vehicle_category_sort.xlsx](./doc/vehicle_category_sort.xlsx)
 
-## Initialize the DB with company, rental_duration and pick-up times
+## Database Views
 
-```sql
--- initialize the company table
-insert into company(id, name) values(1, 'Thrifty');
-insert into company(id, name) values(2, 'Budget');
-insert into company(id, name) values(3, 'GO Rentals');
-commit;
+[company_rental_route](./doc/mysql/model/view/company_rental_route.md)
 
--- initialze the rental_duration table
-insert into rental_duration(id, number_of_days) values(1, 1);
-insert into rental_duration(id, number_of_days) values(2, 2);
-insert into rental_duration(id, number_of_days) values(3, 3);
-insert into rental_duration(id, number_of_days) values(4, 4);
-insert into rental_duration(id, number_of_days) values(5, 5);
+## Database Procedures
 
--- initialze the pick_up_time table
-insert into pick_up_time(id, value) values(1, sec_to_time(9*60*60)); -- 09:00 AM
-insert into pick_up_time(id, value) values(2, sec_to_time(13*60*60)); -- 01:00 PM
-```
+[add_office](./doc/mysql/model/procedure/add_office.md)
+[debug_msg](./doc/mysql/model/procedure/debug_msg.md)
+[get_booking_request_statistics](./doc/mysql/model/procedure/get_booking_request_statistics.md)
+[get_location_name](./doc/mysql/model/procedure/get_location_name.md)
+[get_non_fulfilled_booking_requests](./doc/mysql/model/procedure/get_non_fulfilled_booking_requests.md)
+[refresh_rental_routes](./doc/mysql/model/procedure/refresh_rental_routes.md)
 
-## Initialize the DB with locations and rental routes
+## Database Functions
+
+[get_vehicle_category_id](./doc/mysql/model/function/get_vehicle_category_id.md)
+
+## SQL statements
+
+-   [create_schema.sql](./doc/mysql/sql/create_schema.sql)
+-   [basic_query.sql](./doc/mysql/sql/basic_query.sql)
 
 ## Analysis of Number of Booking Requests for a Designated Date
 
