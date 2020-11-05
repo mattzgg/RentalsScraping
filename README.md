@@ -32,7 +32,7 @@
 
 ## Business rules to follow
 
--   Three companies of scraping tasks contain different locations in New Zealand, **Thrifty** with 42 locations, **Budget** with 35 and **Gorentals** with 6.
+-   Three companies of scraping tasks contain different locations in New Zealand, **Thrifty** with 28 locations, **Budget** with 35 and **Gorentals** with 6.
     The integration of the locations reduce the duplication works.
 
 ## Constraints
