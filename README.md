@@ -1,10 +1,26 @@
 # RentalsScraping
 
-## Prepare the development environment
+## Project Dependencies
 
--   pip install termcolor
--   pip install mysql-connector-python
--   python -m pip install git+https://github.com/verigak/progress.git@ca6310204e397999ac61ad69f8fba6a7fc775069
+-   selenium==3.141.0
+
+    `pip install selenium`
+
+-   beautifulsoup4==4.9.3
+
+    `pip install beautifulsoup4`
+
+-   mysql-connector-pyton==8.0.21
+
+    `pip install mysql-connector-python`
+
+-   progress==1.5
+
+    `python -m pip install git+https://github.com/verigak/progress.git@ca6310204e397999ac61ad69f8fba6a7fc775069`
+
+-   termcolor==1.1.0
+
+    `pip install termcolor`
 
 ## Concepts
 
@@ -35,11 +51,11 @@
 
 ## Vehicle Category Sort
 
-[vehicle_category_sort.xlsx](./doc/vehicle_category_sort.xlsx)
+-   [vehicle_category_sort.xlsx](./doc/vehicle_category_sort.xlsx)
 
 ## Database Views
 
-[company_rental_route](./doc/mysql/model/view/company_rental_route.md)
+-   [company_rental_route](./doc/mysql/model/view/company_rental_route.md)
 
 ## Database Procedures
 
@@ -52,7 +68,7 @@
 
 ## Database Functions
 
-[get_vehicle_category_id](./doc/mysql/model/function/get_vehicle_category_id.md)
+-   [get_vehicle_category_id](./doc/mysql/model/function/get_vehicle_category_id.md)
 
 ## SQL statements
 
