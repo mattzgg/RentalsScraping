@@ -83,7 +83,7 @@ For **Budget**, it has **35** locations, namely **1225** (35 \* 35) rental route
 
 For **GO Rentals**, it has **6** locations, namely **36** (6 \* 6) rental routes. There are **360** (36 \* 1 \* 2 \* 5) booking requests. Each booking request could bring around **20** rental quotes. So the total of rental quotes could be around **7200** (360 \* 20).
 
-In summary, we have **3** companies, **2045** (784 + 1225 + 36) rental routes, **20450** (7840 + 12250 + 360) booking requests and collect around **204500** (78400 + 122500 + 7200) rental quotes.
+In summary, we have **3** companies, **2045** (784 + 1225 + 36) rental routes, **20450** (7840 + 12250 + 360) booking requests and collect around **204500** (78400 + 122500 + 7200) rental quotes and **39** locations after integration of **3** companies.
 
 ## References
 
