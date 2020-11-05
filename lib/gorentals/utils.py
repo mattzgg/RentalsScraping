@@ -1,6 +1,7 @@
 
 # Open Gorentals location webpage
 
+GORENTALS_COMPANY_MAIN_PAGE_URL = "https://www.gorentals.co.nz/"
 car_models = []
 car_features_elements = [
 '#__layout > div > div.flex-1-0-auto > main > content > section > content > div:nth-child(1) > div > div:nth-child(1) > article > footer > p > button > span',

@@ -66,6 +66,15 @@ def wait_element_until_visible_by_css_selector(driver, timeout, css_selector):
     else:
         return element
 
+def wait_element_until_visible_by_id (driver, timeout, id):
+    try:
+        element = WebDriverWait(driver, timeout).until(
+            EC.visibility_of_element_located((By.ID, id))
+        )
+    except TimeoutException:
+        raise RuntimeError("Cannot find the element[" + id + "] on the page.")
+    else:
+        return element
 
 def wait_elements_until_visible_by_css_selector(driver, timeout, css_selector):
     try:
