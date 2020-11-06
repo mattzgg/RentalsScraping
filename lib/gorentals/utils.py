@@ -84,3 +84,12 @@ def get_car_feature ():
     #     driver.close()
 
 # list_locators()
+
+def create_date_list_for_Gorentals():
+    import datetime
+    import pandas as pd
+    base = datetime.datetime.today()
+    numdays = 60
+    date_list = [base + datetime.timedelta(days=x) for x in range(numdays)]
+    for i in date_list:
+        print(i.strftime("%a,%b %d %Y"))

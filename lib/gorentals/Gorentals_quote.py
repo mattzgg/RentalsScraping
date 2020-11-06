@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from lib.utils.constants import *
 from lib.utils.web_scraping import *
-from lib.gorentals.Location_extract import *
+# from lib.gorentals.Location_extract import *
 
 driver=webdriver.Chrome()
 driver.implicitly_wait(8)
