@@ -127,3 +127,13 @@ def extract_price(quote_text):
         price = Decimal(price_text)
 
     return price
+
+
+def check_if_element_has_class(element, specific_class):
+    element_class = element.get_attribute("class")
+    return specific_class in element_class
+
+
+def click_element(driver, element):
+    # WebElement.click() sometimes doesn't work so use javascript code instead.
+    driver.execute_script("arguments[0].click();", element)

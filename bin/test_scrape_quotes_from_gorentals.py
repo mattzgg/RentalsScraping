@@ -11,7 +11,7 @@ def main():
         "drop_off_office_name": "Auckland City",
         "drop_off_time_value": "01:00 PM",
         "pick_up_date_id": 24,
-        "pick_up_date_value": "07/11/2020",
+        "pick_up_date_value": "08/11/2020",
         "pick_up_office_address": "Sir Henry Wigley Drive, Frankton, Queenstown, 9300",
         "pick_up_office_name": "Queenstown Airport",
         "pick_up_time_id": 2,

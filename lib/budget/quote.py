@@ -159,7 +159,7 @@ def __fill_date_input(driver, input_css_selector, input_value):
     left_difference = compare_month_year(current_month_year, left_month_year)
     right_difference = compare_month_year(current_month_year, right_month_year)
 
-    # Adjust the date picker to make it dispaly proper dates which include the current date
+    # Adjust the date picker to make it display proper dates which include the current date.
     if left_difference < 0:
         prev_counter = 0
         step_count = abs(left_difference)
@@ -173,7 +173,7 @@ def __fill_date_input(driver, input_css_selector, input_value):
             prev_counter += 1
     elif right_difference > 0:
         next_counter = 0
-        step_count = abs(right_difference)
+        step_count = right_difference
         while next_counter < step_count:
             next_link = wait_element_until_visible_by_css_selector(
                 driver,

@@ -8,9 +8,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from lib.utils import constants
 from lib.utils.web_scraping import (
-    wait_element_until_visible_by_id,
-    wait_element_until_visible_by_xpath,
     wait_element_until_present_by_xpath,
+    wait_element_until_visible_by_xpath,
+    wait_element_until_visible_by_css_selector,
+    parse_date_text,
+    check_if_element_has_class,
+    click_element,
 )
 
 
@@ -33,45 +36,12 @@ def scrape_quotes(non_fulfilled_booking_request):
     driver.maximize_window()
     driver.get(constants.GORENTALS_COMPANY_MAIN_PAGE_URL)
 
-    __fill_location_input(driver, "locationPickerStart", pick_up_office_name)
-    __fill_location_input(driver, "locationPickerEnd", drop_off_office_name)
-    # pick_up_location_option.click()
-    # pick_up_location_select = Select(pick_up_location_input)
-    # pick_up_location_select.select_by_visible_text(pick_up_office_name)
-    # ----end----
-
-    # Click the drop-off button and select one drop_off_location in the dropbox
-    driver.find_element_by_id("locationPickerEnd").click()
-    drop_off_location = Select(driver.find_element_by_id("locationPickerEnd"))
-    drop_off_location.select_by_visible_text("Christchurch Airport")
-
-    # select one pick_up_date in the calendar
-    driver.find_element_by_id("datePickerStart").click()
-    element1 = driver.find_element_by_css_selector(
-        "#__layout > div > div.flex-1-0-auto > main > header > content > div.position-absolute.top.left.width-span12.height-span12.tablet\:paddingRight-48.desktop\:paddingRight-56 > div > div.flex-1.display-flex.flexDirection-column.justifyContent-flexEnd.paddingTop-16.paddingBottom-16.tablet\:justifyContent-center.tablet\:paddingBottom-8.tabletWide\:paddingBottom-32 > div > div > form > div:nth-child(1) > p.gridColumn-span7 > span > div > div > div.c-header > div:nth-child(3) > svg > path"
-    )
-    webdriver.ActionChains(driver).move_to_element(element1).click(element1).perform()
-    time.sleep(2)
-    webdriver.Chrome().refresh
-    driver.find_element_by_css_selector(
-        "#__layout > div > div.flex-1-0-auto > main > header > content > div.position-absolute.top.left.width-span12.height-span12.tablet\:paddingRight-48.desktop\:paddingRight-56 > div > div.flex-1.display-flex.flexDirection-column.justifyContent-flexEnd.paddingTop-16.paddingBottom-16.tablet\:justifyContent-center.tablet\:paddingBottom-8.tabletWide\:paddingBottom-32 > div > div > form > div:nth-child(1) > p.gridColumn-span7 > span > div > div > div.c-weeks > div > div > div:nth-child(2) > div:nth-child(4) > div > div.c-day-content-wrapper > div > div"
-    ).click()
-
-    # Select one pick_up_time in the time dropbox
-    driver.find_element_by_id("timePickerStart").send_keys("01:00 PM")
-
-    # select one drop_off_date in the calendar
-    driver.find_element_by_id("datePickerEnd").click()
-    # element2 = driver.find_element_by_css_selector('#__layout > div > div.flex-1-0-auto > main > header > content > div.position-absolute.top.left.width-span12.height-span12.tablet\:paddingRight-48.desktop\:paddingRight-56 > div > div.flex-1.display-flex.flexDirection-column.justifyContent-flexEnd.paddingTop-16.paddingBottom-16.tablet\:justifyContent-center.tablet\:paddingBottom-8.tabletWide\:paddingBottom-32 > div > div > form > div:nth-child(1) > p.gridColumn-span7 > span > div > div > div.c-header > div:nth-child(3) > svg')
-    # webdriver.ActionChains(driver).move_to_element(element2).click(element2).perform()
-    time.sleep(2)
-    webdriver.Chrome().refresh
-    driver.find_element_by_css_selector(
-        "#__layout > div > div.flex-1-0-auto > main > header > content > div.position-absolute.top.left.width-span12.height-span12.tablet\:paddingRight-48.desktop\:paddingRight-56 > div > div.flex-1.display-flex.flexDirection-column.justifyContent-flexEnd.paddingTop-16.paddingBottom-16.tablet\:justifyContent-center.tablet\:paddingBottom-8.tabletWide\:paddingBottom-32 > div > div > form > div.tabletWide\:display-grid.gridColumn-span12.tabletWide\:gridColumn-span4.display-grid.gridTemplateColumns-12fr.gridGap-8.marginTop-8.marginBottom-8.tabletWide\:margin-0.display-grid > p.gridColumn-span7 > span > div > div > div.c-weeks > div > div > div:nth-child(3) > div:nth-child(2) > div > div.c-day-content-wrapper > div > div"
-    ).click()
-
-    # select one drop_off_date in the calendar
-    driver.find_element_by_id("timePickerEnd").send_keys("03:30 PM")
+    __fill_select(driver, "locationPickerStart", pick_up_office_name)
+    __fill_select(driver, "locationPickerEnd", drop_off_office_name)
+    __fill_date_input(driver, "datePickerStart", "Pick-up date", pick_up_date_value)
+    __fill_select(driver, "timePickerStart", pick_up_time_value)
+    __fill_date_input(driver, "datePickerEnd", "Drop-off date", drop_off_date_value)
+    __fill_select(driver, "timePickerEnd", drop_off_time_value)
 
     # Click the "Find my car" button
     driver.find_element_by_css_selector("form > div >button").click()
@@ -132,27 +102,120 @@ def scrape_quotes(non_fulfilled_booking_request):
     driver.quit()
 
 
-def __fill_location_input(driver, location_input_id, office_name):
-    location_option_xpath = (
+def __fill_select(driver, select_id, selected_option_text):
+    selected_option_xpath = (
         "//label[@for='{}']//ul/li//span[normalize-space(text())='{}']".format(
-            location_input_id, office_name
+            select_id, selected_option_text
         )
     )
-    location_option = wait_element_until_present_by_xpath(
+    selected_option = wait_element_until_present_by_xpath(
         driver,
         constants.SCRAPE_TIMEOUT,
-        location_option_xpath,
+        selected_option_xpath,
     )
 
-    location_select_caret_xpath = "//label[@for='{}']//div[@class='{}']".format(
-        location_input_id, "multiselect__select"
+    select_caret_xpath = "//label[@for='{}']//div[@class='{}']".format(
+        select_id, "multiselect__select"
     )
-    location_select_caret = wait_element_until_present_by_xpath(
+    select_caret = wait_element_until_visible_by_xpath(
         driver,
         constants.SCRAPE_TIMEOUT,
-        location_select_caret_xpath,
+        select_caret_xpath,
     )
 
-    # location_select_caret.click() has problem so use javascript code instead
-    driver.execute_script("arguments[0].click();", location_select_caret)
-    driver.execute_script("arguments[0].click();", location_option)
+    click_element(driver, select_caret)
+    click_element(driver, selected_option)
+
+
+def __fill_date_input(driver, date_input_id, date_picker_name, date_value):
+    def parse_month_year_text(month_year_text):
+        items = month_year_text.split(" ")
+        month_text = items[0]
+        year_text = items[1]
+        return {"month": constants.MONTHS[month_text.upper()], "year": int(year_text)}
+
+    def calc_number_of_months(month_year):
+        return month_year["year"] * 12 + month_year["month"]
+
+    def compare_month_year(month_year_1, month_year_2):
+        number_of_month_1 = calc_number_of_months(month_year_1)
+        number_of_month_2 = calc_number_of_months(month_year_2)
+        return number_of_month_1 - number_of_month_2
+
+    def raise_date_is_not_spported():
+        raise RuntimeError("The date {} is not supported.".format(date_value))
+
+    # Open the date picker.
+    date_input_css_selector = "#{}".format(date_input_id)
+    date_input = wait_element_until_visible_by_css_selector(
+        driver, constants.SCRAPE_TIMEOUT, date_input_css_selector
+    )
+    click_element(driver, date_input)
+
+    current_date = parse_date_text(date_value)
+
+    # Calculate the parameters required to decide whether to adjust the date picker.
+    month_year_label_xpath = "//div[@name='{}' and contains(@class, 'goDatePicker')]//div[@class='c-title']".format(
+        date_picker_name
+    )
+    month_year_label = wait_element_until_visible_by_xpath(
+        driver,
+        constants.SCRAPE_TIMEOUT,
+        month_year_label_xpath,
+    )
+    month_year = parse_month_year_text(month_year_label.text)
+    current_month_year = {
+        "month": current_date["month"],
+        "year": current_date["year"],
+    }
+    difference = compare_month_year(current_month_year, month_year)
+
+    # Adjust the date picker to make it display proper dates which include the current date.
+    if difference < 0:
+        prev_counter = 0
+        step_count = abs(difference)
+        prev_link_xpath = "(//div[@name='{}' and contains(@class, 'goDatePicker')]//*[name()='svg'])[1]".format(
+            date_picker_name
+        )
+        while prev_counter < step_count:
+            prev_link = wait_element_until_visible_by_xpath(
+                driver,
+                constants.SCRAPE_TIMEOUT,
+                prev_link_xpath,
+            )
+            is_prev_link_disabled = check_if_element_has_class(prev_link, "c-disabled")
+            if is_prev_link_disabled:
+                raise_date_is_not_spported()
+            click_element(driver, prev_link)
+            prev_counter += 1
+    elif difference > 0:
+        next_counter = 0
+        step_count = difference
+        next_link_xpath = "(//div[@name='{}' and contains(@class, 'goDatePicker')]//*[name()='svg'])[2]".format(
+            date_picker_name
+        )
+        while next_counter < step_count:
+            next_link = wait_element_until_visible_by_xpath(
+                driver,
+                constants.SCRAPE_TIMEOUT,
+                next_link_xpath,
+            )
+            is_next_link_disabled = check_if_element_has_class(next_link, "c-disabled")
+            if is_next_link_disabled:
+                raise_date_is_not_spported()
+            click_element(driver, next_link)
+            next_counter += 1
+
+    # Select the current date
+    day_text = str(current_date["day"])
+    day_link_xpath = "//div[@name='{}' and contains(@class, 'c-weeks-rows')]//div[normalize-space(text())='{}']".format(
+        date_picker_name, day_text
+    )
+    day_link = wait_element_until_visible_by_xpath(
+        driver, constants.SCRAPE_TIMEOUT, day_link_xpath
+    )
+    day_link_wrapper = day_link.find_element(By.XPATH, "..")
+    day_link_wrapper_style = day_link_wrapper.get_attribute("style")
+    if "opacity" in day_link_wrapper_style:
+        raise_date_is_not_spported()
+    click_element(driver, day_link)
