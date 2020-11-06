@@ -62,15 +62,12 @@ def wait_element_until_visible_by_css_selector(driver, timeout, css_selector):
         EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector))
     )
 
-def wait_element_until_visible_by_id (driver, timeout, id):
-    try:
-        element = WebDriverWait(driver, timeout).until(
-            EC.visibility_of_element_located((By.ID, id))
-        )
-    except TimeoutException:
-        raise RuntimeError("Cannot find the element[" + id + "] on the page.")
-    else:
-        return element
+
+def wait_element_until_visible_by_id(driver, timeout, id):
+    return WebDriverWait(driver, timeout).until(
+        EC.visibility_of_element_located((By.ID, id))
+    )
+
 
 def wait_elements_until_visible_by_css_selector(driver, timeout, css_selector):
     return WebDriverWait(driver, timeout).until(
@@ -87,6 +84,12 @@ def wait_element_until_visible_by_xpath(driver, timeout, xpath):
 def wait_elements_until_visible_by_xpath(driver, timeout, xpath):
     return WebDriverWait(driver, timeout).until(
         EC.visibility_of_all_elements_located((By.XPATH, xpath))
+    )
+
+
+def wait_element_until_present_by_xpath(driver, timeout, xpath):
+    return WebDriverWait(driver, timeout).until(
+        EC.presence_of_element_located((By.XPATH, xpath))
     )
 
 

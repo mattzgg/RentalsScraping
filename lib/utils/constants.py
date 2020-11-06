@@ -1,6 +1,6 @@
 SCRAPE_TIMEOUT = 10  # seconds
 SQL_SELECT_LIMIT_ROW_COUNT = 1000
-IS_CHROME_HEADLESS_ENABLED = True
+IS_CHROME_HEADLESS_ENABLED = False
 
 THRIFTY_COMPANY_ID = 1
 THRIFTY_COMPANY_LOCATIONS_PAGE_URL = "https://www.thrifty.co.nz/locations/"
@@ -10,7 +10,9 @@ BUDGET_COMPANY_LOCATIONS_PAGE_URL = "https://www.budget.co.nz/en/locations/new-z
 BUDGET_BOOKING_PAGE_URL = "https://www.budget.co.nz/en/home"
 
 GORENTALS_COMPANY_ID = 3
-GORENTALS_COMPANY_LOCATIONS_PAGE_URL = "https://www.gorentals.co.nz/rental-car-locations/"
+GORENTALS_COMPANY_LOCATIONS_PAGE_URL = (
+    "https://www.gorentals.co.nz/rental-car-locations/"
+)
 GORENTALS_COMPANY_MAIN_PAGE_URL = "https://www.gorentals.co.nz/"
 
 RENTALS_SCRAPING_DB_CONNECTION_CONIFG = {
