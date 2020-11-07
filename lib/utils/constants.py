@@ -4,6 +4,7 @@ IS_CHROME_HEADLESS_ENABLED = False
 
 THRIFTY_COMPANY_ID = 1
 THRIFTY_COMPANY_LOCATIONS_PAGE_URL = "https://www.thrifty.co.nz/locations/"
+THRIFTY_BOOKING_PAGE_URL = "https://www.thrifty.co.nz/"
 
 BUDGET_COMPANY_ID = 2
 BUDGET_COMPANY_LOCATIONS_PAGE_URL = "https://www.budget.co.nz/en/locations/new-zealand"
