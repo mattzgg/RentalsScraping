@@ -13,7 +13,7 @@ GORENTALS_COMPANY_ID = 3
 GORENTALS_COMPANY_LOCATIONS_PAGE_URL = (
     "https://www.gorentals.co.nz/rental-car-locations/"
 )
-GORENTALS_COMPANY_MAIN_PAGE_URL = "https://www.gorentals.co.nz/"
+GORENTALS_BOOKING_PAGE_URL = "https://www.gorentals.co.nz/"
 
 RENTALS_SCRAPING_DB_CONNECTION_CONIFG = {
     "host": "stratford.cafcotgpxc6f.ap-southeast-2.rds.amazonaws.com",

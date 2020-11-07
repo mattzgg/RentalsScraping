@@ -43,7 +43,7 @@ def scrape_quotes(non_fulfilled_booking_request):
             chrome_options.add_argument("--headless")
         driver = webdriver.Chrome(options=chrome_options)
         driver.maximize_window()
-        driver.get(constants.GORENTALS_COMPANY_MAIN_PAGE_URL)
+        driver.get(constants.GORENTALS_BOOKING_PAGE_URL)
 
         __fill_select(driver, "locationPickerStart", pick_up_office_name)
         __fill_select(driver, "locationPickerEnd", drop_off_office_name)
