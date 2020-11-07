@@ -12,7 +12,6 @@ from ..utils.web_scraping import (
     wait_elements_until_visible_by_css_selector,
     parse_date_text,
     check_if_element_has_class,
-    click_element,
     extract_price,
 )
 from ..utils.ui import create_warning
@@ -56,7 +55,7 @@ def scrape_quotes(non_fulfilled_booking_request):
         find_my_car_button = wait_element_until_visible_by_xpath(
             driver, constants.SCRAPE_TIMEOUT, "//button[span='Find my car']"
         )
-        click_element(driver, find_my_car_button)
+        find_my_car_button.click()
         try:
             wait_elements_until_visible_by_css_selector(
                 driver,
@@ -91,17 +90,17 @@ def __fill_select(driver, select_id, selected_option_text):
         selected_option_xpath,
     )
 
-    select_caret_xpath = "//label[@for='{}']//div[@class='{}']".format(
-        select_id, "multiselect__select"
+    select_xpath = "//label[@for='{}']/div[contains(@class, '{}')]".format(
+        select_id, "multiselect"
     )
-    select_caret = wait_element_until_visible_by_xpath(
+    select = wait_element_until_visible_by_xpath(
         driver,
         constants.SCRAPE_TIMEOUT,
-        select_caret_xpath,
+        select_xpath,
     )
 
-    click_element(driver, select_caret)
-    click_element(driver, selected_option)
+    select.click()
+    selected_option.click()
 
 
 def __fill_date_input(driver, date_input_id, date_picker_name, date_value):
@@ -127,8 +126,7 @@ def __fill_date_input(driver, date_input_id, date_picker_name, date_value):
     date_input = wait_element_until_visible_by_css_selector(
         driver, constants.SCRAPE_TIMEOUT, date_input_css_selector
     )
-    click_element(driver, date_input)
-
+    date_input.click()
     current_date = parse_date_text(date_value)
 
     # Calculate the parameters required to decide whether to adjust the date picker.
@@ -163,7 +161,7 @@ def __fill_date_input(driver, date_input_id, date_picker_name, date_value):
             is_prev_link_disabled = check_if_element_has_class(prev_link, "c-disabled")
             if is_prev_link_disabled:
                 raise_date_is_not_spported()
-            click_element(driver, prev_link)
+            prev_link.click()
             prev_counter += 1
     elif difference > 0:
         next_counter = 0
@@ -180,7 +178,7 @@ def __fill_date_input(driver, date_input_id, date_picker_name, date_value):
             is_next_link_disabled = check_if_element_has_class(next_link, "c-disabled")
             if is_next_link_disabled:
                 raise_date_is_not_spported()
-            click_element(driver, next_link)
+            next_link.click()
             next_counter += 1
 
     # Select the current date
@@ -195,7 +193,7 @@ def __fill_date_input(driver, date_input_id, date_picker_name, date_value):
     day_link_wrapper_style = day_link_wrapper.get_attribute("style")
     if "opacity" in day_link_wrapper_style:
         raise_date_is_not_spported()
-    click_element(driver, day_link)
+    day_link.click()
 
 
 def __scrape_quotes_on_page(driver):
