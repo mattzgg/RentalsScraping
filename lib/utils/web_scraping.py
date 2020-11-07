@@ -120,7 +120,7 @@ def time_until_end_of_day(dt=None):
 def extract_price(quote_text):
     price = 0
 
-    pattern = re.compile("\d+\.\d{2}")
+    pattern = re.compile("\d+(\.\d{2})?")
     match_object = pattern.search(quote_text)
     if match_object:
         price_text = match_object.group(0)

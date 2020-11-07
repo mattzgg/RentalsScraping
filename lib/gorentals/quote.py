@@ -1,105 +1,82 @@
-import time
+import time, pprint
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from lib.utils import constants
-from lib.utils.web_scraping import (
+from bs4 import BeautifulSoup
+from ..utils import constants
+from ..utils.web_scraping import (
     wait_element_until_present_by_xpath,
     wait_element_until_visible_by_xpath,
     wait_element_until_visible_by_css_selector,
+    wait_elements_until_visible_by_css_selector,
     parse_date_text,
     check_if_element_has_class,
     click_element,
+    extract_price,
 )
+from ..utils.ui import create_warning
 
 
 def scrape_quotes(non_fulfilled_booking_request):
-    pick_up_office_name = non_fulfilled_booking_request["pick_up_office_name"]
-    pick_up_office_address = non_fulfilled_booking_request["pick_up_office_address"]
-    drop_off_office_name = non_fulfilled_booking_request["drop_off_office_name"]
-    drop_off_office_address = non_fulfilled_booking_request["drop_off_office_address"]
-    pick_up_date_value = non_fulfilled_booking_request[
-        "pick_up_date_value"
-    ]  # 06/11/2020
-    pick_up_time_value = non_fulfilled_booking_request["pick_up_time_value"]  # 09:00 AM
-    drop_off_date_value = non_fulfilled_booking_request["drop_off_date_value"]
-    drop_off_time_value = non_fulfilled_booking_request["drop_off_time_value"]
+    driver = None
+    quotes = []
 
-    chrome_options = Options()
-    if constants.IS_CHROME_HEADLESS_ENABLED:
-        chrome_options.add_argument("--headless")
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.maximize_window()
-    driver.get(constants.GORENTALS_COMPANY_MAIN_PAGE_URL)
+    try:
+        pick_up_office_name = non_fulfilled_booking_request["pick_up_office_name"]
+        pick_up_office_address = non_fulfilled_booking_request["pick_up_office_address"]
+        drop_off_office_name = non_fulfilled_booking_request["drop_off_office_name"]
+        drop_off_office_address = non_fulfilled_booking_request[
+            "drop_off_office_address"
+        ]
+        pick_up_date_value = non_fulfilled_booking_request[
+            "pick_up_date_value"
+        ]  # 06/11/2020
+        pick_up_time_value = non_fulfilled_booking_request[
+            "pick_up_time_value"
+        ]  # 09:00 AM
+        drop_off_date_value = non_fulfilled_booking_request["drop_off_date_value"]
+        drop_off_time_value = non_fulfilled_booking_request["drop_off_time_value"]
 
-    __fill_select(driver, "locationPickerStart", pick_up_office_name)
-    __fill_select(driver, "locationPickerEnd", drop_off_office_name)
-    __fill_date_input(driver, "datePickerStart", "Pick-up date", pick_up_date_value)
-    __fill_select(driver, "timePickerStart", pick_up_time_value)
-    __fill_date_input(driver, "datePickerEnd", "Drop-off date", drop_off_date_value)
-    __fill_select(driver, "timePickerEnd", drop_off_time_value)
+        chrome_options = Options()
+        if constants.IS_CHROME_HEADLESS_ENABLED:
+            chrome_options.add_argument("--headless")
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.maximize_window()
+        driver.get(constants.GORENTALS_COMPANY_MAIN_PAGE_URL)
 
-    # Click the "Find my car" button
-    driver.find_element_by_css_selector("form > div >button").click()
+        __fill_select(driver, "locationPickerStart", pick_up_office_name)
+        __fill_select(driver, "locationPickerEnd", drop_off_office_name)
+        __fill_date_input(driver, "datePickerStart", "Pick-up date", pick_up_date_value)
+        __fill_select(driver, "timePickerStart", pick_up_time_value)
+        __fill_date_input(driver, "datePickerEnd", "Drop-off date", drop_off_date_value)
+        __fill_select(driver, "timePickerEnd", drop_off_time_value)
 
-    # Let the browser wait 2 seconds for opening the price quote page
-    time.sleep(2)
+        # Click the Find my car button
+        find_my_car_button = wait_element_until_visible_by_xpath(
+            driver, constants.SCRAPE_TIMEOUT, "//button[span='Find my car']"
+        )
+        click_element(driver, find_my_car_button)
+        try:
+            wait_elements_until_visible_by_css_selector(
+                driver,
+                constants.SCRAPE_TIMEOUT,
+                "main > content > section > content > div article",
+            )
+        except TimeoutException as exception:
+            warning = create_warning(
+                "\nNo quotes were found for the non-fulfilled booking request:\n{}".format(
+                    pprint.pformat(non_fulfilled_booking_request)
+                )
+            )
+            print(warning)
+        else:
+            quotes = __scrape_quotes_on_page(driver)
+    finally:
+        if driver:
+            driver.quit()
 
-    # Get car_category names
-    car_categories = []
-    elements = driver.find_elements_by_css_selector("content > div > h2")
-    for element in elements:
-        result = element.text
-        car_categories.append(result)
-    print(car_categories)
-
-    # Get car_model names
-    car_models = []
-    time.sleep(1)
-
-    for car_model_name in driver.find_elements_by_css_selector(
-        '[class="fontSize-16 fontFamily-bold whiteSpace-nowrap backgroundImage-goGradientElipsis"'
-    ):
-        result = car_model_name.text
-        car_models.append(result)
-        # print(result)
-    print(car_models)
-
-    # Get car years
-    car_years_list = []
-    for car_years in driver.find_elements_by_css_selector(
-        '[class="fontSize-14 color-goGrayDark"'
-    ):
-        result = car_years.text
-        # print(result)
-        car_years_list.append(result)
-    print(car_years_list)
-
-    # Get total price
-    total_price_list = []
-    for total_price in driver.find_elements_by_css_selector(
-        '[class="display-inlineBlock lineHeight-20"'
-    ):
-        result = total_price.text
-        total_price_list.append(result)
-    print(total_price_list)
-
-    # Get car availability status
-    status_list = []
-    for status in driver.find_elements_by_css_selector(
-        '[class="paddingLeft-8 paddingRight-8"'
-    ):
-        result = status.text
-        status_list.append(result)
-    print(status_list)
-
-    time.sleep(2)
-
-    driver.quit()
+    return quotes
 
 
 def __fill_select(driver, select_id, selected_option_text):
@@ -219,3 +196,29 @@ def __fill_date_input(driver, date_input_id, date_picker_name, date_value):
     if "opacity" in day_link_wrapper_style:
         raise_date_is_not_spported()
     click_element(driver, day_link)
+
+
+def __scrape_quotes_on_page(driver):
+    soup = BeautifulSoup(driver.page_source, "html.parser")
+    vehicle_category_sections = soup.select("main > content > section > content > div")
+    quotes = []
+    for vehicle_category_section in vehicle_category_sections:
+        vehicle_category_name_in_company = str(vehicle_category_section.h2.string)
+        quote_articles = vehicle_category_section.select("article")
+        for quote_article in quote_articles:
+            vehicle_category_description = str(quote_article.header.h2.string)
+            vehicle_age_description = str(quote_article.header.p.string)
+            quote_span = quote_article.select(
+                "content > ul > li:nth-child(2) > span:nth-child(1)"
+            )[0]
+            quote_text = str(quote_span.string)
+            price = extract_price(quote_text)
+            quotes.append(
+                {
+                    "vehicle_category_name_in_company": vehicle_category_name_in_company,
+                    "vehicle_category_description": vehicle_category_description,
+                    "vehicle_age_description": vehicle_age_description,
+                    "price": price,
+                }
+            )
+    return quotes

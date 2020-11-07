@@ -264,3 +264,7 @@ def __scrape_quotes_on_page(driver):
         index = index + 1
 
     return quotes
+
+
+def scrape_quotes(non_fulfilled_booking_request):
+    return []
