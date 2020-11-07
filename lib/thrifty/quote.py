@@ -18,20 +18,36 @@ from ..utils.ui import create_warning
 
 
 def scrape_quotes(non_fulfilled_booking_request):
+    def normalize_office_name(office_name):
+        # Normalization is required because some location names on the Locations page
+        # are different from the counterparts used in the location select.
+        return office_name.replace("–", "-")
+
+    def normalize_time_value(time_value):
+        return time_value.lower().lstrip("0")
+
     driver = None
     quotes = []
 
     try:
-        pick_up_office_name = non_fulfilled_booking_request["pick_up_office_name"]
+        pick_up_office_name = normalize_office_name(
+            non_fulfilled_booking_request["pick_up_office_name"]
+        )
         pick_up_office_address = non_fulfilled_booking_request["pick_up_office_address"]
-        drop_off_office_name = non_fulfilled_booking_request["drop_off_office_name"]
+        drop_off_office_name = normalize_office_name(
+            non_fulfilled_booking_request["drop_off_office_name"]
+        )
         drop_off_office_address = non_fulfilled_booking_request[
             "drop_off_office_address"
         ]
         pick_up_date_value = non_fulfilled_booking_request["pick_up_date_value"]
-        pick_up_time_value = non_fulfilled_booking_request["pick_up_time_value"]
+        pick_up_time_value = normalize_time_value(
+            non_fulfilled_booking_request["pick_up_time_value"]
+        )
         drop_off_date_value = non_fulfilled_booking_request["drop_off_date_value"]
-        drop_off_time_value = non_fulfilled_booking_request["drop_off_time_value"]
+        drop_off_time_value = normalize_time_value(
+            non_fulfilled_booking_request["drop_off_time_value"]
+        )
 
         chrome_options = Options()
         if constants.IS_CHROME_HEADLESS_ENABLED:
@@ -40,38 +56,34 @@ def scrape_quotes(non_fulfilled_booking_request):
         driver.maximize_window()
         driver.get(constants.THRIFTY_BOOKING_PAGE_URL)
 
-        __fill_location_input(driver, "pickup-depot", pick_up_office_name)
-        __fill_location_input(driver, "return-depot", drop_off_office_name)
+        __fill_select(driver, "pickup-depot", pick_up_office_name)
+        __fill_select(driver, "return-depot", drop_off_office_name)
         __fill_date_input(driver, "pickup-date", pick_up_date_value)
+        __fill_select(driver, "pickup-time", pick_up_time_value)
         __fill_date_input(driver, "return-date", drop_off_date_value)
-        time.sleep(5)
-        # __fill_select(driver, "locationPickerStart", pick_up_office_name)
-        # __fill_select(driver, "locationPickerEnd", drop_off_office_name)
-        # __fill_date_input(driver, "datePickerStart", "Pick-up date", pick_up_date_value)
-        # __fill_select(driver, "timePickerStart", pick_up_time_value)
-        # __fill_date_input(driver, "datePickerEnd", "Drop-off date", drop_off_date_value)
-        # __fill_select(driver, "timePickerEnd", drop_off_time_value)
+        __fill_select(driver, "return-time", drop_off_time_value)
 
-        # # Click the Find my car button
-        # find_my_car_button = wait_element_until_visible_by_xpath(
-        #     driver, constants.SCRAPE_TIMEOUT, "//button[span='Find my car']"
-        # )
-        # click_element(driver, find_my_car_button)
-        # try:
-        #     wait_elements_until_visible_by_css_selector(
-        #         driver,
-        #         constants.SCRAPE_TIMEOUT,
-        #         "main > content > section > content > div article",
-        #     )
-        # except TimeoutException as exception:
-        #     warning = create_warning(
-        #         "\nNo quotes were found for the non-fulfilled booking request:\n{}".format(
-        #             pprint.pformat(non_fulfilled_booking_request)
-        #         )
-        #     )
-        #     print(warning)
-        # else:
-        #     quotes = __scrape_quotes_on_page(driver)
+        # Click the Find a Vehicle button
+        find_a_vehicle_button = wait_element_until_visible_by_css_selector(
+            driver, constants.SCRAPE_TIMEOUT, "#find_vehicle"
+        )
+        find_a_vehicle_button.click()
+
+        try:
+            wait_elements_until_visible_by_css_selector(
+                driver,
+                constants.SCRAPE_TIMEOUT,
+                ".booking-steps__content .vehicle",
+            )
+        except TimeoutException as exception:
+            warning = create_warning(
+                "\nNo quotes were found for the non-fulfilled booking request:\n{}".format(
+                    pprint.pformat(non_fulfilled_booking_request)
+                )
+            )
+            print(warning)
+        else:
+            quotes = __scrape_quotes_on_page(driver)
     finally:
         if driver:
             driver.quit()
@@ -79,7 +91,7 @@ def scrape_quotes(non_fulfilled_booking_request):
     return quotes
 
 
-def __fill_location_input(driver, location_input_id, location_input_value):
+def __fill_select(driver, location_input_id, location_input_value):
     location_input_css_selector = "#select2-{}-container".format(location_input_id)
     location_input = wait_element_until_visible_by_css_selector(
         driver, constants.SCRAPE_TIMEOUT, location_input_css_selector
@@ -198,25 +210,22 @@ def __fill_date_input(driver, date_input_id, date_value):
 
 def __scrape_quotes_on_page(driver):
     soup = BeautifulSoup(driver.page_source, "html.parser")
-    vehicle_category_sections = soup.select("main > content > section > content > div")
+    vehicle_elements = soup.select(".booking-steps__content .vehicle")
     quotes = []
-    for vehicle_category_section in vehicle_category_sections:
-        vehicle_category_name_in_company = str(vehicle_category_section.h2.string)
-        quote_articles = vehicle_category_section.select("article")
-        for quote_article in quote_articles:
-            vehicle_category_description = str(quote_article.header.h2.string)
-            vehicle_age_description = str(quote_article.header.p.string)
-            quote_span = quote_article.select(
-                "content > ul > li:nth-child(2) > span:nth-child(1)"
-            )[0]
-            quote_text = str(quote_span.string)
-            price = extract_price(quote_text)
-            quotes.append(
-                {
-                    "vehicle_category_name_in_company": vehicle_category_name_in_company,
-                    "vehicle_category_description": vehicle_category_description,
-                    "vehicle_age_description": vehicle_age_description,
-                    "price": price,
-                }
-            )
+    for vehicle_element in vehicle_elements:
+        vehicle_category_name_in_company = str(
+            vehicle_element.select_one("p.vehicle__p > strong").string
+        )
+        price_element = vehicle_element.select_one("span.vehicle__total > span.text")
+        price_text = str(price_element.string) if price_element else "0.00"
+        price = extract_price(price_text)
+        # For Thrifty, vehicle category description and vehicle age description are optional
+        quotes.append(
+            {
+                "vehicle_category_name_in_company": vehicle_category_name_in_company,
+                "vehicle_category_description": "",
+                "vehicle_age_description": "",
+                "price": price,
+            }
+        )
     return quotes
