@@ -94,3 +94,4 @@ In summary, we have **3** companies, **2045** (784 + 1225 + 36) rental routes, *
 -   https://stackoverflow.com/questions/43164411/why-do-we-still-need-parser-like-beautifulsoup-if-we-can-use-selenium
 -   Check the timezone of db server: SELECT @@global.time_zone;
 -   Set timezone in MySql workbench: set time_zone = '+13:00';
+-   [WebDriver click() vs JavaScript click()](https://stackoverflow.com/questions/34562061/webdriver-click-vs-javascript-click)
