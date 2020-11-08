@@ -16,7 +16,7 @@ from ..utils.web_scraping import (
     parse_date_text,
     extract_price,
 )
-from ..utils.ui import create_warning, create_error
+from ..utils.ui import create_warning
 
 
 def scrape_quotes(non_fulfilled_booking_request):
