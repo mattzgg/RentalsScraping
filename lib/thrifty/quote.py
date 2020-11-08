@@ -1,7 +1,8 @@
 import time, pprint
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 from ..utils import constants
@@ -13,6 +14,10 @@ from ..utils.web_scraping import (
     parse_date_text,
     check_if_element_has_class,
     extract_price,
+    parse_month_year_text,
+    compare_month_year,
+    raise_date_is_not_spported,
+    add_months_to_month_year,
 )
 from ..utils.ui import create_warning
 
@@ -110,22 +115,38 @@ def __fill_select(driver, location_input_id, location_input_value):
 
 
 def __fill_date_input(driver, date_input_id, date_value):
-    def parse_month_year_text(month_year_text):
-        items = month_year_text.split(" ")
-        month_text = items[0]
-        year_text = items[1]
-        return {"month": constants.MONTHS[month_text.upper()], "year": int(year_text)}
+    def calculate_month_year_difference(driver, target_month_year):
+        """Calculate the difference required to decide whether to adjust the date picker."""
+        current_month_label_css_selector = "#{}_root .picker__month".format(
+            date_input_id
+        )
+        current_month_label = wait_element_until_visible_by_css_selector(
+            driver, constants.SCRAPE_TIMEOUT, current_month_label_css_selector
+        )
+        current_month_label_text = current_month_label.text
+        current_year_label_css_selector = "#{}_root .picker__year".format(date_input_id)
+        current_year_label = wait_element_until_visible_by_css_selector(
+            driver, constants.SCRAPE_TIMEOUT, current_year_label_css_selector
+        )
+        current_year_label_text = current_year_label.text
+        current_month_year = parse_month_year_text(
+            "{} {}".format(current_month_label_text, current_year_label_text)
+        )
+        difference = compare_month_year(target_month_year, current_month_year)
+        return difference
 
-    def calc_number_of_months(month_year):
-        return month_year["year"] * 12 + month_year["month"]
+    class target_month_year_to_be_visible:
+        def __init__(self, target_month_year):
+            self.target_month_year = target_month_year
 
-    def compare_month_year(month_year_1, month_year_2):
-        number_of_month_1 = calc_number_of_months(month_year_1)
-        number_of_month_2 = calc_number_of_months(month_year_2)
-        return number_of_month_1 - number_of_month_2
+        def __call__(self, driver):
+            return calculate_month_year_difference(driver, self.target_month_year) == 0
 
-    def raise_date_is_not_spported():
-        raise RuntimeError("The date {} is not supported.".format(date_value))
+    def wait_for_target_month_year_to_show(target_month_year):
+        # Wait for target month year, or an stale element exception occurs.
+        WebDriverWait(driver, constants.SCRAPE_TIMEOUT).until(
+            target_month_year_to_be_visible(target_month_year)
+        )
 
     # Open the date picker.
     date_input_css_selector = "#{}".format(date_input_id)
@@ -134,34 +155,19 @@ def __fill_date_input(driver, date_input_id, date_value):
     )
     date_input.click()
 
-    current_date = parse_date_text(date_value)
-
-    # Calculate the parameters required to decide whether to adjust the date picker.
-    month_label_css_selector = "#{}_root .picker__month".format(date_input_id)
-    month_label = wait_element_until_visible_by_css_selector(
-        driver, constants.SCRAPE_TIMEOUT, month_label_css_selector
-    )
-    month_label_text = month_label.text
-    year_label_css_selector = "#{}_root .picker__year".format(date_input_id)
-    year_label = wait_element_until_visible_by_css_selector(
-        driver, constants.SCRAPE_TIMEOUT, year_label_css_selector
-    )
-    year_label_text = year_label.text
-    month_year = parse_month_year_text(
-        "{} {}".format(month_label_text, year_label_text)
-    )
-    current_month_year = {
-        "month": current_date["month"],
-        "year": current_date["year"],
+    date_dmy = parse_date_text(date_value)
+    target_month_year = {
+        "month": date_dmy["month"],
+        "year": date_dmy["year"],
     }
-    difference = compare_month_year(current_month_year, month_year)
+    difference = calculate_month_year_difference(driver, target_month_year)
 
     # Adjust the date picker to make it display proper dates which include the current date.
     if difference < 0:
-        prev_counter = 0
+        prev_counter = 1
         step_count = abs(difference)
         prev_link_css_selector = "#{}_root .picker__nav--prev".format(date_input_id)
-        while prev_counter < step_count:
+        while prev_counter <= step_count:
             prev_link = wait_element_until_visible_by_css_selector(
                 driver,
                 constants.SCRAPE_TIMEOUT,
@@ -171,14 +177,21 @@ def __fill_date_input(driver, date_input_id, date_value):
                 prev_link, "picker__nav--disabled"
             )
             if is_prev_link_disabled:
-                raise_date_is_not_spported()
+                raise_date_is_not_spported(date_value)
             prev_link.click()
+
+            number_of_months_added = step_count - prev_counter
+            temp_target_month_year = add_months_to_month_year(
+                target_month_year, number_of_months_added
+            )
+            wait_for_target_month_year_to_show(temp_target_month_year)
+
             prev_counter += 1
     elif difference > 0:
-        next_counter = 0
+        next_counter = 1
         step_count = difference
         next_link_css_selector = "#{}_root .picker__nav--next".format(date_input_id)
-        while next_counter < step_count:
+        while next_counter <= step_count:
             next_link = wait_element_until_visible_by_css_selector(
                 driver,
                 constants.SCRAPE_TIMEOUT,
@@ -188,12 +201,19 @@ def __fill_date_input(driver, date_input_id, date_value):
                 next_link, "picker__nav--disabled"
             )
             if is_next_link_disabled:
-                raise_date_is_not_spported()
+                raise_date_is_not_spported(date_value)
             next_link.click()
+
+            number_of_months_added = -(step_count - next_counter)
+            temp_target_month_year = add_months_to_month_year(
+                target_month_year, number_of_months_added
+            )
+            wait_for_target_month_year_to_show(temp_target_month_year)
+
             next_counter += 1
 
     # Select the current date
-    day_text = str(current_date["day"])
+    day_text = str(date_dmy["day"])
     day_link_xpath = (
         "//div[@id='{}_root']//div[contains(@class, 'picker__day') "
         + "and contains(@class, 'picker__day--infocus') "
@@ -204,7 +224,7 @@ def __fill_date_input(driver, date_input_id, date_value):
     )
     day_link_class = day_link.get_attribute("class")
     if "picker__day--disabled" in day_link_class:
-        raise_date_is_not_spported()
+        raise_date_is_not_spported(date_value)
     day_link.click()
 
 

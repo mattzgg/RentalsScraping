@@ -1,6 +1,4 @@
-import time
-import random
-import re
+import time, random, re, math
 
 from datetime import datetime
 from decimal import Decimal
@@ -132,3 +130,45 @@ def extract_price(quote_text):
 def check_if_element_has_class(element, specific_class):
     element_class = element.get_attribute("class")
     return specific_class in element_class
+
+
+def join_bs4_strings(bs4_element, separator=""):
+    bs4_strings = bs4_element.strings
+    strings = map(str, bs4_strings)
+    return separator.join(strings)
+
+
+def parse_month_year_text(month_year_text):
+    """A month year text matches the MONTH YEAR pattern, e.g. November 2020"""
+    items = month_year_text.split(" ")
+    month_text = items[0]
+    year_text = items[1]
+    return {"month": constants.MONTHS[month_text.upper()], "year": int(year_text)}
+
+
+def calc_number_of_months(month_year):
+    return month_year["year"] * 12 + month_year["month"]
+
+
+def compare_month_year(month_year_1, month_year_2):
+    number_of_months_1 = calc_number_of_months(month_year_1)
+    number_of_months_2 = calc_number_of_months(month_year_2)
+    return number_of_months_1 - number_of_months_2
+
+
+def add_months_to_month_year(month_year, number_of_months_added):
+    number_of_months = calc_number_of_months(month_year)
+    new_number_of_months = number_of_months + number_of_months_added
+    month = new_number_of_months % 12
+    year = math.floor(new_number_of_months / 12)
+    if month == 0:
+        month = 12
+        year = year - 1
+    return {
+        "month": month,
+        "year": year,
+    }
+
+
+def raise_date_is_not_spported(date_value):
+    raise RuntimeError("The date {} is not supported.".format(date_value))
