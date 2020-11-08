@@ -206,11 +206,11 @@ def __scrape_quotes_on_page(driver):
         for quote_article in quote_articles:
             vehicle_category_description = str(quote_article.header.h2.string)
             vehicle_age_description = str(quote_article.header.p.string)
-            quote_span = quote_article.select(
+            price_span = quote_article.select_one(
                 "content > ul > li:nth-child(2) > span:nth-child(1)"
-            )[0]
-            quote_text = str(quote_span.string)
-            price = extract_price(quote_text)
+            )
+            price_text = str(price_span.string)
+            price = extract_price(price_text)
             quotes.append(
                 {
                     "vehicle_category_name_in_company": vehicle_category_name_in_company,
