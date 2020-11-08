@@ -33,7 +33,7 @@ SCRAPE_QUOTES_FUNCS = dict(
 
 
 def signal_handler(sig, frame):
-    print(create_info("\nYou pressed Ctrl+C!"))
+    print(create_info("\nYou pressed Ctrl+C. Bye!"))
     sys.exit(0)
 
 
@@ -58,7 +58,7 @@ def main():
                 continue
 
             progress_bar = ChargingBar(
-                "Scraping quotes",
+                "Scraping quotes on {}".format(scraping_date_str),
                 max=total_count,
                 color="green",
                 suffix="%(percent)d%%, %(index)d/%(max)d, %(elapsed_td)s",
