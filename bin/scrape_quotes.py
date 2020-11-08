@@ -1,11 +1,10 @@
-import import_lib
-import time
+import import_lib, time, signal, sys
 
 from datetime import datetime
 from progress.bar import ChargingBar
 from lib.utils import constants
 from lib.utils.web_scraping import time_until_end_of_day
-from lib.utils.ui import create_error, print_exception
+from lib.utils.ui import create_info, print_exception
 from lib.db.quote import (
     get_booking_request_statistics,
     get_non_fulfilled_booking_requests,
@@ -33,12 +32,19 @@ SCRAPE_QUOTES_FUNCS = dict(
 )
 
 
+def signal_handler(sig, frame):
+    print(create_info("\nYou pressed Ctrl+C!"))
+    sys.exit(0)
+
+
 def __wait_until_tomorrow():
     time_until_today = time_until_end_of_day()
     time.sleep(time_until_today)
 
 
 def main():
+    signal.signal(signal.SIGINT, signal_handler)
+
     while True:
         try:
             scraping_date_str = datetime.today().strftime("%d/%m/%Y")
@@ -89,6 +95,8 @@ def main():
                         progress_bar.next()
                 finally:
                     quote_cache.flush()
+        except SystemExit:
+            break
         except:
             print_exception()
 
