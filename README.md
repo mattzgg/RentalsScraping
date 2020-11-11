@@ -26,8 +26,8 @@
 
 -   A **Rental Route** is defined as a pair of locations. One represents the pick-up location and the other represents the drop-off location. Each car rental company offers customers a number of rental routes.
 -   A **Rental Duration** represents the number of rental days.
--   A **Booking Request** is an object which encapsulates a query condtion required to operate on a car rental company's website to get rental quotes. It consists of a company, a pick-up location, a pick-up date, a pick-up time, a drop-off location, a drop-off date and a drop-off time. For a designated date, the pick-up date is the day next to it and its booking requests are definite.
--   A **Fulfilled Booking Request** is a booking request whose corresponding rental quotes have been scraped and saved to the database.
+-   A **Scraping Request** is an object which encapsulates query details required to operate on a car rental company's website to get rental quotes. It consists of a company, a pick-up location, a pick-up date, a pick-up time, a drop-off location, a drop-off date and a drop-off time. For a designated date, the pick-up date is the day next to it and its booking requests are definite.
+-   A **Fulfilled Scraping Request** is a booking request whose corresponding rental quotes have been scraped and saved to the database.
 -   A **Booking Request Statistics** is an object which reflects the total number of booking requests and the number of fullfilled booking requests for a designated date. The formula to calulcate the total number of booking requests for a designated date is: **<font color="blue">Number of rental routes \* Number of pick-up dates \* Number of pick-up times \* Number of rental durations</font>**
 
 ## Business rules to follow
