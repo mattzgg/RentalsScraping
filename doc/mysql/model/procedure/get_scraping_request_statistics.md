@@ -1,5 +1,5 @@
 ```sql
-CREATE PROCEDURE `get_booking_request_statistics` (
+CREATE PROCEDURE `get_scraping_request_statistics` (
 	IN in_scraping_date_str VARCHAR(10), -- %d/%m/%Y
     OUT out_total_count INT,
     OUT out_fulfilled_count INT
@@ -21,13 +21,13 @@ BEGIN
         SELECT LAST_INSERT_ID() INTO _pick_up_date_id;
 	END IF;
 
-    -- Calculate the total count of booking requests required for a day.
+    -- Calculate the total count of scraping requests required for a day.
     SELECT count(*) INTO _company_rental_route_count FROM company_rental_route;
     SELECT count(*) INTO _pick_up_time_count FROM pick_up_time;
     SELECT count(*) INTO _rental_duration_count FROM rental_duration;
     SET out_total_count = _company_rental_route_count * _pick_up_time_count * _rental_duration_count;
 
-    -- Get the count of fulfilled booking requests for the designated day.
+    -- Get the count of fulfilled scraping requests for the designated day.
 	SELECT
 		COUNT(DISTINCT company_id,
 			rental_route_id,

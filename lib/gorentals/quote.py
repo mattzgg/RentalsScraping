@@ -22,25 +22,23 @@ from ..utils.web_scraping import (
 from ..utils.ui import create_warning
 
 
-def scrape_quotes(non_fulfilled_booking_request):
+def scrape_quotes(non_fulfilled_scraping_request):
     driver = None
     quotes = []
 
     try:
-        pick_up_office_name = non_fulfilled_booking_request["pick_up_office_name"]
-        pick_up_office_address = non_fulfilled_booking_request["pick_up_office_address"]
-        drop_off_office_name = non_fulfilled_booking_request["drop_off_office_name"]
-        drop_off_office_address = non_fulfilled_booking_request[
+        pick_up_office_name = non_fulfilled_scraping_request["pick_up_office_name"]
+        pick_up_office_address = non_fulfilled_scraping_request[
+            "pick_up_office_address"
+        ]
+        drop_off_office_name = non_fulfilled_scraping_request["drop_off_office_name"]
+        drop_off_office_address = non_fulfilled_scraping_request[
             "drop_off_office_address"
         ]
-        pick_up_date_value = non_fulfilled_booking_request[
-            "pick_up_date_value"
-        ]  # 06/11/2020
-        pick_up_time_value = non_fulfilled_booking_request[
-            "pick_up_time_value"
-        ]  # 09:00 AM
-        drop_off_date_value = non_fulfilled_booking_request["drop_off_date_value"]
-        drop_off_time_value = non_fulfilled_booking_request["drop_off_time_value"]
+        pick_up_date_value = non_fulfilled_scraping_request["pick_up_date_value"]
+        pick_up_time_value = non_fulfilled_scraping_request["pick_up_time_value"]
+        drop_off_date_value = non_fulfilled_scraping_request["drop_off_date_value"]
+        drop_off_time_value = non_fulfilled_scraping_request["drop_off_time_value"]
 
         chrome_options = Options()
         if constants.IS_CHROME_HEADLESS_ENABLED:
@@ -70,8 +68,8 @@ def scrape_quotes(non_fulfilled_booking_request):
             )
         except TimeoutException as exception:
             warning = create_warning(
-                "\nNo quotes were found for the non-fulfilled booking request:\n{}".format(
-                    pprint.pformat(non_fulfilled_booking_request)
+                "\nNo quotes were found for the non-fulfilled scraping request:\n{}".format(
+                    pprint.pformat(non_fulfilled_scraping_request)
                 )
             )
             print(warning)

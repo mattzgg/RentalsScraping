@@ -4,17 +4,17 @@ from ..utils.datatype import convert_tuple_to_dict
 from ..utils.ui import create_info
 
 
-def get_booking_request_statistics(scraping_date_str):
+def get_scraping_request_statistics(scraping_date_str):
     def invoke_cursor_func(cursor):
         args = [scraping_date_str, 0, 0]
-        result_args = cursor.callproc("get_booking_request_statistics", args)
+        result_args = cursor.callproc("get_scraping_request_statistics", args)
         return {"total_count": result_args[1], "fulfilled_count": result_args[2]}
 
     return execute_query(invoke_cursor_func)
 
 
-def get_non_fulfilled_booking_requests(scraping_date_str, offset, row_count):
-    non_fulfilled_booking_request_property_names = [
+def get_non_fulfilled_scraping_requests(scraping_date_str, offset, row_count):
+    non_fulfilled_scraping_request_property_names = [
         "company_id",
         "rental_route_id",
         "pick_up_date_id",
@@ -30,31 +30,33 @@ def get_non_fulfilled_booking_requests(scraping_date_str, offset, row_count):
         "drop_off_time_value",
     ]
 
-    def convert_func(non_fulfilled_booking_request):
+    def convert_func(non_fulfilled_scraping_request):
         return convert_tuple_to_dict(
-            non_fulfilled_booking_request, non_fulfilled_booking_request_property_names
+            non_fulfilled_scraping_request,
+            non_fulfilled_scraping_request_property_names,
         )
 
     def invoke_cursor_func(cursor):
-        non_fulfilled_booking_requests = []
+        non_fulfilled_scraping_requests = []
         cursor.callproc(
-            "get_non_fulfilled_booking_requests", [scraping_date_str, offset, row_count]
+            "get_non_fulfilled_scraping_requests",
+            [scraping_date_str, offset, row_count],
         )
         for result in cursor.stored_results():
-            non_fulfilled_booking_requests = list(map(convert_func, result.fetchall()))
+            non_fulfilled_scraping_requests = list(map(convert_func, result.fetchall()))
 
-        return non_fulfilled_booking_requests
+        return non_fulfilled_scraping_requests
 
     return execute_query(invoke_cursor_func)
 
 
-def save_quotes(non_fulfilled_booking_request, quotes):
+def save_quotes(non_fulfilled_scraping_request, quotes):
     def invoke_cursor_func(cursor):
-        company_id = non_fulfilled_booking_request["company_id"]
-        rental_route_id = non_fulfilled_booking_request["rental_route_id"]
-        pick_up_date_id = non_fulfilled_booking_request["pick_up_date_id"]
-        pick_up_time_id = non_fulfilled_booking_request["pick_up_time_id"]
-        rental_duration_id = non_fulfilled_booking_request["rental_duration_id"]
+        company_id = non_fulfilled_scraping_request["company_id"]
+        rental_route_id = non_fulfilled_scraping_request["rental_route_id"]
+        pick_up_date_id = non_fulfilled_scraping_request["pick_up_date_id"]
+        pick_up_time_id = non_fulfilled_scraping_request["pick_up_time_id"]
+        rental_duration_id = non_fulfilled_scraping_request["rental_duration_id"]
         created_on = datetime.now()
 
         query_parameters_list = []
@@ -92,8 +94,8 @@ def save_quotes(non_fulfilled_booking_request, quotes):
 class QuoteCache:
     """A simple tool to boost performance for saving quotes to database.
     There are two kinds of quotes. One is for real quotes. Real quotes has
-    vehicle category id and price. The other is for booking request fulfillment (BRF).
-    Quotes which reprsent booking request fulfilment They don't have vehicle
+    vehicle category id and price. The other is for scraping request fulfillment (BRF).
+    Quotes which reprsent scraping request fulfilment They don't have vehicle
     category id and price.
     """
 
@@ -113,7 +115,7 @@ class QuoteCache:
     def get_count(self):
         return len(self._cache)
 
-    def add_quotes(self, non_fulfilled_booking_request, quotes):
+    def add_quotes(self, non_fulfilled_scraping_request, quotes):
         # If quotes is an empty list, then a BRF quote is required.
         quotes_count = len(quotes) if len(quotes) > 0 else 1
         if quotes_count > QuoteCache.CAPACITY:
@@ -125,11 +127,11 @@ class QuoteCache:
         if self.get_count() + quotes_count > QuoteCache.CAPACITY:
             return False
 
-        company_id = non_fulfilled_booking_request["company_id"]
-        rental_route_id = non_fulfilled_booking_request["rental_route_id"]
-        pick_up_date_id = non_fulfilled_booking_request["pick_up_date_id"]
-        pick_up_time_id = non_fulfilled_booking_request["pick_up_time_id"]
-        rental_duration_id = non_fulfilled_booking_request["rental_duration_id"]
+        company_id = non_fulfilled_scraping_request["company_id"]
+        rental_route_id = non_fulfilled_scraping_request["rental_route_id"]
+        pick_up_date_id = non_fulfilled_scraping_request["pick_up_date_id"]
+        pick_up_time_id = non_fulfilled_scraping_request["pick_up_time_id"]
+        rental_duration_id = non_fulfilled_scraping_request["rental_duration_id"]
         created_on = datetime.now()
 
         if quotes:

@@ -14,11 +14,11 @@ select * from company_rental_route;
 
 select id, value from pick_up_date;
 select id, date_format(value, '%d/%m/%Y %h:%i %p') value from pick_up_date;
-call get_booking_request_statistics('04/11/2020', @total_count, @fulfilled_count);
+call get_scraping_request_statistics('04/11/2020', @total_count, @fulfilled_count);
 select @total_count, @fulfilled_count;
 
 select * from rental_route order by id;
-call get_non_fulfilled_booking_requests('03/11/2020', 1000, 1000);
+call get_non_fulfilled_scraping_requests('03/11/2020', 1000, 1000);
 
 select * from vehicle_category;
 select get_vehicle_category_id(3, 'Manual Cars', 'Toyota Corolla Manual', '5 year(s) old');

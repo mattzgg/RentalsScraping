@@ -1,5 +1,5 @@
 ```sql
-CREATE PROCEDURE `get_non_fulfilled_booking_requests` (
+CREATE PROCEDURE `get_non_fulfilled_scraping_requests` (
 	IN in_scraping_date_str VARCHAR(10), -- %d/%m/%Y
     IN in_offset INT,
     IN in_row_count INT
