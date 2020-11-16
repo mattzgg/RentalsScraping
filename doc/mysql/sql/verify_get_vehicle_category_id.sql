@@ -23,6 +23,7 @@ SELECT
     GET_VEHICLE_CATEGORY_ID(2, 'Full Size SUV', '', '') = 5 vr_2_5,
     GET_VEHICLE_CATEGORY_ID(2, 'Premium SUV', '', '') = 15 vr_2_15,
     GET_VEHICLE_CATEGORY_ID(2, 'Premium UTE', '', '') = 7 vr_2_7,
+    GET_VEHICLE_CATEGORY_ID(2, 'Premium Minivan', '', '') = 9 vr_2_9,
     GET_VEHICLE_CATEGORY_ID(3,
             'Small Cars',
             'Toyota Yaris or similar',
