@@ -3,7 +3,7 @@ CREATE FUNCTION `get_vehicle_category_id`(
 	_company_id INT,
     _vehicle_category_name_in_company VARCHAR(128), -- vehicle category name scraped from website
     _vehicle_category_description VARCHAR(128), -- mandatory if company is GO Rentals
-    _vehicle_age_description VARCHAR(32)
+    _vehicle_age_description VARCHAR(32) -- mandatory if company is GO Rentals
 ) RETURNS INT
 DETERMINISTIC
 BEGIN
@@ -32,8 +32,14 @@ BEGIN
 			SET _vehicle_category_name = 'Fullsize AWD (seats 5-7 passengers)';
 		ELSEIF _vehicle_category_name_in_company = 'Premium SUV' THEN
 			SET _vehicle_category_name = _vehicle_category_name_in_company;
-		ELSEIF _vehicle_category_name_in_company = 'Premium UTE' THEN
+		ELSEIF _vehicle_category_name_in_company = 'Premium Ute' THEN
 			SET _vehicle_category_name = 'Utility Vehicle with towbar';
+		ELSEIF _vehicle_category_name_in_company = 'Premium Minivan' THEN
+			SET _vehicle_category_name = 'Luxury Van';
+		ELSEIF _vehicle_category_name_in_company = 'Compact Hybrid' THEN
+			SET _vehicle_category_name = 'Compact Hybrid Car';
+		ELSEIF _vehicle_category_name_in_company = 'Standard SUV' THEN
+			SET _vehicle_category_name = 'Intermediate SUV 2WD';
 		END IF;
 	ELSEIF _company_id = 3 then -- vehicle category name in GO Rentals need to be changed in the following way
 		IF _vehicle_category_name_in_company = 'Small Cars'
