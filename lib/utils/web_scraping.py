@@ -118,6 +118,7 @@ def time_until_end_of_day(dt=None):
 def extract_price(quote_text):
     price = 0
 
+    quote_text = quote_text.replace(",", "")  # Remove the thousand separator
     pattern = re.compile("\d+(\.\d{2})?")
     match_object = pattern.search(quote_text)
     if match_object:
