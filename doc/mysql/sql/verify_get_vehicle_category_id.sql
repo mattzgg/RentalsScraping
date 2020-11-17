@@ -57,7 +57,7 @@ SELECT
     GET_VEHICLE_CATEGORY_ID(3,
             'Large Cars / SUVs',
             'Hyundai Tucson or similar',
-            '1 year(s) old') = 3 vr_3_3,
+            '1 year(s) old') = 8 vr_3_8,
     GET_VEHICLE_CATEGORY_ID(3,
             'Large Cars / SUVs',
             'Toyota Camry Hybrid',
