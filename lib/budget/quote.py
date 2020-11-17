@@ -103,7 +103,7 @@ def __fill_location_input(driver, location_input_id, office_name, office_address
             driver, constants.SCRAPE_TIMEOUT
         ).until(presence_of_match_from_suggested_locations(office_address))
     except TimeoutException:
-        raise Exception(
+        raise RuntimeError(
             "Budget > Fill location input '{}': No suggestion found for '{}/{}'".format(
                 location_input_css_selector, office_name, office_address
             )

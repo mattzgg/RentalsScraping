@@ -119,7 +119,7 @@ class QuoteCache:
         # If quotes is an empty list, then a BRF quote is required.
         quotes_count = len(quotes) if len(quotes) > 0 else 1
         if quotes_count > QuoteCache.CAPACITY:
-            raise Exception(
+            raise RuntimeError(
                 "Quote cache is not big enough to accommodate {} quotes.".format(
                     QuoteCache.CAPACITY
                 )

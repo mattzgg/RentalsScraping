@@ -42,12 +42,29 @@ def __wait_until_tomorrow():
     time.sleep(time_until_today)
 
 
+def format_today():
+    return datetime.today().strftime("%d/%m/%Y")
+
+
+def raise_scraping_date_passed_exception(scraping_date_str):
+    scraping_request_statistics = get_scraping_request_statistics(scraping_date_str)
+    total_count = scraping_request_statistics["total_count"]
+    fulfilled_count = scraping_request_statistics["fulfilled_count"]
+    non_fulfilled_count = total_count - fulfilled_count
+    raise RuntimeError(
+        "The scraping date {} passed, scraping for it has been interrupted."
+        + "{} non-fulfilled scraping requests have been skipped".format(
+            scraping_date_str, non_fulfilled_count
+        )
+    )
+
+
 def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     while True:
         try:
-            scraping_date_str = datetime.today().strftime("%d/%m/%Y")
+            scraping_date_str = format_today()
             scraping_request_statistics = get_scraping_request_statistics(
                 scraping_date_str
             )
@@ -105,6 +122,10 @@ def main():
                         progress_bar.next()
                 finally:
                     quote_cache.flush()
+
+                    current_date_str = format_today()
+                    if current_date_str != scraping_date_str:
+                        raise_scraping_date_passed_exception(scraping_date_str)
         except SystemExit:
             break
         except:

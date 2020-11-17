@@ -41,9 +41,9 @@
 -   Only **5** rental durations are available, namely **1 day**, **2 days**, **3 days**, **4 days** and **5 days**.
 -   Only **2** pick-up times are available, namely **10:00 AM** and **02:00 PM**.
 
-## How the rental quotes scraping works
+## How RentalsScraping works
 
-![How Rental Quotes Scraping Works](./doc/how_rqs_works.png?raw=true)
+![How RentalsScraping Works](./doc/how_it_works.png?raw=true)
 
 ## ERD
 
