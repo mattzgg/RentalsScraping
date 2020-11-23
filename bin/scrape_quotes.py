@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import import_lib, time
 
 from selenium import webdriver

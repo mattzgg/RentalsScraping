@@ -99,4 +99,7 @@ In summary, we have **3** companies, **2045** (784 + 1225 + 36) rental routes, *
 -   [ChromeDriver - WebDriver for Chrome](https://chromedriver.chromium.org/)
 -   [Context managers and multiprocessing pools](https://stackoverflow.com/questions/24717468/context-managers-and-multiprocessing-pools)
 -   [multiprocessing.Pool: What's the difference between map_async and imap?](https://stackoverflow.com/questions/26520781/multiprocessing-pool-whats-the-difference-between-map-async-and-imap)
--   [In what situation do we need to use `multiprocessing.Pool.imap_unordered`?](https://stackoverflow.com/questions/19063238/in-what-situation-do-we-need-to-use-multiprocessing-pool-imap-unordered)
+-   [In what situation do we need to use 'multiprocessing.Pool.imap_unordered'?](https://stackoverflow.com/questions/19063238/in-what-situation-do-we-need-to-use-multiprocessing-pool-imap-unordered)
+-   Add RentalsScraping to /usr/local/bin
+    -   `ln -s [The absolute path to bin/scrape_quotes.py] /usr/local/bin/scrape-quotes`
+    -   `chmod 755 /usr/local/bin/scrape-quotes`
