@@ -29,7 +29,7 @@ def scrape_offices():
         driver.get(constants.GORENTALS_COMPANY_LOCATIONS_PAGE_URL)
 
         location_links = wait_elements_until_visible_by_xpath(
-            driver, constants.SCRAPE_TIMEOUT, "/descendant::ul[2]/li//a"
+            driver, constants.WAIT_ELEMENT_TIMEOUT, "/descendant::ul[2]/li//a"
         )
         __scrape_office_enhanced = with_random_delay(__scrape_office)
         offices = []
@@ -59,9 +59,9 @@ def __scrape_office(driver, location_link):
 
     try:
         # It seems that more time is need to wait for the address to appear.
-        office_address_p = WebDriverWait(driver, constants.SCRAPE_TIMEOUT * 6).until(
-            html_text_has_been_added((By.XPATH, "/descendant::figure[2]//p[2]"))
-        )
+        office_address_p = WebDriverWait(
+            driver, constants.WAIT_ELEMENT_TIMEOUT * 6
+        ).until(html_text_has_been_added((By.XPATH, "/descendant::figure[2]//p[2]")))
     except:
         print_exception("Can't get the address of the office: {}".format(name))
     else:

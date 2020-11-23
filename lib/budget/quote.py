@@ -1,15 +1,9 @@
-import pprint
-
-from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 
 from ..utils import constants
 from ..utils.web_scraping import (
+    wait_dom_ready,
     wait_element_until_visible_by_css_selector,
     wait_elements_until_visible_by_css_selector,
     wait_element_until_visible_by_xpath,
@@ -22,70 +16,53 @@ from ..utils.web_scraping import (
     raise_date_is_not_spported,
     add_months_to_month_year,
     check_if_element_has_class,
+    assemble_quotes,
 )
-from ..utils.ui import create_warning
+from ..utils.exceptions import QuotesNotAvailableException
 
 
-def scrape_quotes(non_fulfilled_scraping_request):
-    driver = None
-    quotes = []
+def scrape_quotes(driver, scraping_request):
+    pick_up_office_name = scraping_request["pick_up_office_name"]
+    pick_up_office_address = scraping_request["pick_up_office_address"]
+    drop_off_office_name = scraping_request["drop_off_office_name"]
+    drop_off_office_address = scraping_request["drop_off_office_address"]
+    pick_up_date_value = scraping_request["pick_up_date_value"]
+    pick_up_time_value = scraping_request["pick_up_time_value"]
+    drop_off_date_value = scraping_request["drop_off_date_value"]
+    drop_off_time_value = scraping_request["drop_off_time_value"]
 
+    driver.get(constants.BUDGET_BOOKING_PAGE_URL)
+    wait_dom_ready(driver, constants.DOM_READY_TIMEOUT)
+
+    __fill_location_input(
+        driver, "PicLoc_value", pick_up_office_name, pick_up_office_address
+    )
+    __fill_location_input(
+        driver, "DropLoc_value", drop_off_office_name, drop_off_office_address
+    )
+    __fill_date_input(driver, "from", pick_up_date_value)
+    __fill_time_select(driver, "reservationModel.pickUpTime", pick_up_time_value)
+    __fill_date_input(driver, "to", drop_off_date_value)
+    __fill_time_select(driver, "reservationModel.dropTime", drop_off_time_value)
+
+    # Click the Select My Vehicle button
+    select_my_vehicle_button = wait_element_until_visible_by_css_selector(
+        driver, constants.WAIT_ELEMENT_TIMEOUT, "#res-home-select-car"
+    )
+    select_my_vehicle_button.click()
+    wait_dom_ready(driver, constants.DOM_READY_TIMEOUT)
+
+    quotes = assemble_quotes(scraping_request, [])
     try:
-        pick_up_office_name = non_fulfilled_scraping_request["pick_up_office_name"]
-        pick_up_office_address = non_fulfilled_scraping_request[
-            "pick_up_office_address"
-        ]
-        drop_off_office_name = non_fulfilled_scraping_request["drop_off_office_name"]
-        drop_off_office_address = non_fulfilled_scraping_request[
-            "drop_off_office_address"
-        ]
-        pick_up_date_value = non_fulfilled_scraping_request["pick_up_date_value"]
-        pick_up_time_value = non_fulfilled_scraping_request["pick_up_time_value"]
-        drop_off_date_value = non_fulfilled_scraping_request["drop_off_date_value"]
-        drop_off_time_value = non_fulfilled_scraping_request["drop_off_time_value"]
-
-        chrome_options = Options()
-        if constants.IS_CHROME_HEADLESS_ENABLED:
-            chrome_options.add_argument("--headless")
-        driver = webdriver.Chrome(options=chrome_options)
-        driver.maximize_window()
-        driver.get(constants.BUDGET_BOOKING_PAGE_URL)
-
-        __fill_location_input(
-            driver, "PicLoc_value", pick_up_office_name, pick_up_office_address
+        wait_elements_until_visible_by_css_selector(
+            driver,
+            constants.WAIT_ELEMENT_TIMEOUT,
+            ".available-car-box",
         )
-        __fill_location_input(
-            driver, "DropLoc_value", drop_off_office_name, drop_off_office_address
-        )
-        __fill_date_input(driver, "from", pick_up_date_value)
-        __fill_time_select(driver, "reservationModel.pickUpTime", pick_up_time_value)
-        __fill_date_input(driver, "to", drop_off_date_value)
-        __fill_time_select(driver, "reservationModel.dropTime", drop_off_time_value)
-
-        # Click the Select My Vehicle button
-        select_my_vehicle_button = wait_element_until_visible_by_css_selector(
-            driver, constants.SCRAPE_TIMEOUT, "#res-home-select-car"
-        )
-        select_my_vehicle_button.click()
-
-        try:
-            wait_elements_until_visible_by_css_selector(
-                driver,
-                constants.SCRAPE_TIMEOUT,
-                ".available-car-box",
-            )
-        except TimeoutException as exception:
-            warning = create_warning(
-                "\nNo quotes were found for the non-fulfilled scraping request:\n{}".format(
-                    pprint.pformat(non_fulfilled_scraping_request)
-                )
-            )
-            print(warning)
-        else:
-            quotes = __scrape_quotes_on_page(driver)
-    finally:
-        if driver:
-            driver.quit()
+    except:
+        raise QuotesNotAvailableException(scraping_request)
+    else:
+        quotes = __parse_select_my_vehicle_response(driver, scraping_request)
 
     return quotes
 
@@ -93,37 +70,30 @@ def scrape_quotes(non_fulfilled_scraping_request):
 def __fill_location_input(driver, location_input_id, office_name, office_address):
     location_input_css_selector = "#{}".format(location_input_id)
     location_input = wait_element_until_visible_by_css_selector(
-        driver, constants.SCRAPE_TIMEOUT, location_input_css_selector
+        driver, constants.WAIT_ELEMENT_TIMEOUT, location_input_css_selector
     )
     location_input_value = constants.BUDGET_LOCATION_INPUT_VALUE_DICT[office_name]
+    location_input.clear()
     location_input.send_keys(location_input_value)
 
-    try:
-        suggested_location_element = WebDriverWait(
-            driver, constants.SCRAPE_TIMEOUT
-        ).until(presence_of_match_from_suggested_locations(office_address))
-    except TimeoutException:
-        raise RuntimeError(
-            "Budget > Fill location input '{}': No suggestion found for '{}/{}'".format(
-                location_input_css_selector, office_name, office_address
-            )
-        )
-    else:
-        suggested_location_element.click()
+    office_address_element = WebDriverWait(
+        driver, constants.WAIT_ELEMENT_TIMEOUT
+    ).until(visibility_of_office_address_element(office_address))
+    office_address_element.click()
 
 
-class presence_of_match_from_suggested_locations:
+class visibility_of_office_address_element:
     def __init__(self, office_address):
         self.office_address = office_address
 
     def __call__(self, driver):
-        suggested_locations = driver.find_elements(
-            By.CSS_SELECTOR, ".angucomplete-description"
+        suggested_location_elements = driver.find_elements_by_css_selector(
+            ".angucomplete-description"
         )
-        if suggested_locations:
-            for suggested_location in suggested_locations:
-                if suggested_location.text == self.office_address:
-                    return suggested_location
+        if suggested_location_elements:
+            for suggested_location_element in suggested_location_elements:
+                if suggested_location_element.text == self.office_address:
+                    return suggested_location_element
             return False
         else:
             return False
@@ -136,7 +106,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         """Calculate the difference required to decide whether to adjust the date picker."""
         current_month_year_label = wait_element_until_visible_by_css_selector(
             driver,
-            constants.SCRAPE_TIMEOUT,
+            constants.WAIT_ELEMENT_TIMEOUT,
             current_month_year_label_css_selector,
         )
         current_month_year = parse_month_year_text(current_month_year_label.text)
@@ -164,7 +134,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         current_month_year_label_css_selector, target_month_year
     ):
         # Wait for target month year, or an stale element exception occurs.
-        WebDriverWait(driver, constants.SCRAPE_TIMEOUT).until(
+        WebDriverWait(driver, constants.WAIT_ELEMENT_TIMEOUT).until(
             target_month_year_to_be_visible(
                 current_month_year_label_css_selector, target_month_year
             )
@@ -173,7 +143,7 @@ def __fill_date_input(driver, date_input_id, date_value):
     # Open the date picker.
     date_input_css_selector = "#{}".format(date_input_id)
     date_input = wait_element_until_visible_by_css_selector(
-        driver, constants.SCRAPE_TIMEOUT, date_input_css_selector
+        driver, constants.WAIT_ELEMENT_TIMEOUT, date_input_css_selector
     )
     focus_element(driver, date_input)
 
@@ -203,7 +173,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         while prev_counter <= step_count:
             prev_link = wait_element_until_visible_by_css_selector(
                 driver,
-                constants.SCRAPE_TIMEOUT,
+                constants.WAIT_ELEMENT_TIMEOUT,
                 ".ui-datepicker-prev",
             )
             is_prev_link_disabled = check_if_element_has_class(
@@ -228,7 +198,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         while next_counter <= step_count:
             next_link = wait_element_until_visible_by_css_selector(
                 driver,
-                constants.SCRAPE_TIMEOUT,
+                constants.WAIT_ELEMENT_TIMEOUT,
                 ".ui-datepicker-next",
             )
             is_next_link_disabled = check_if_element_has_class(
@@ -258,7 +228,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         )
         try:
             day_link = wait_element_until_visible_by_xpath(
-                driver, constants.SCRAPE_TIMEOUT, day_link_xpath
+                driver, constants.WAIT_ELEMENT_TIMEOUT, day_link_xpath
             )
         except:
             raise_date_is_not_spported(date_value)
@@ -272,7 +242,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         )
         try:
             day_link = wait_element_until_visible_by_xpath(
-                driver, constants.SCRAPE_TIMEOUT, day_link_xpath
+                driver, constants.WAIT_ELEMENT_TIMEOUT, day_link_xpath
             )
         except:
             raise_date_is_not_spported(date_value)
@@ -284,7 +254,7 @@ def __fill_time_select(driver, time_select_name, time_value):
     time_select_xpath = "//select[@name='" + time_select_name + "']"
     time_select = wait_element_until_visible_by_xpath(
         driver,
-        constants.SCRAPE_TIMEOUT,
+        constants.WAIT_ELEMENT_TIMEOUT,
         time_select_xpath,
     )
     time_select.click()
@@ -296,24 +266,26 @@ def __fill_time_select(driver, time_select_name, time_value):
     time_value = time_value.lstrip("0")
     time_option_xpath = time_select_xpath + "/option[@label='" + time_value + "']"
     time_option = wait_element_until_visible_by_xpath(
-        driver, constants.SCRAPE_TIMEOUT, time_option_xpath
+        driver, constants.WAIT_ELEMENT_TIMEOUT, time_option_xpath
     )
     time_option.click()
 
 
-def __scrape_quotes_on_page(driver):
+def __parse_select_my_vehicle_response(driver, scraping_request):
     soup = BeautifulSoup(driver.page_source, "html.parser")
     available_car_boxes = soup.select(".available-car-box")
-    quotes = []
+    scraping_response = []
     for available_car_box in available_car_boxes:
         vehicle_category_name_in_company = str(
             available_car_box.select_one("h3").string
         )
         price_element = available_car_box.select_one(".paynow price")
-        price_text = join_bs4_strings(price_element) if price_element else "0.00"
-        price = extract_price(price_text)
+        price = None
+        if price_element:
+            price_text = join_bs4_strings(price_element)
+            price = extract_price(price_text)
         # For Budget, vehicle category description and vehicle age description are optional
-        quotes.append(
+        scraping_response.append(
             {
                 "vehicle_category_name_in_company": vehicle_category_name_in_company,
                 "vehicle_category_description": "",
@@ -321,4 +293,5 @@ def __scrape_quotes_on_page(driver):
                 "price": price,
             }
         )
+    quotes = assemble_quotes(scraping_request, scraping_response)
     return quotes

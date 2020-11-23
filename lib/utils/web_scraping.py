@@ -55,6 +55,12 @@ def open_link_in_new_tab(html_link):
     html_link.send_keys(modifier_key, Keys.RETURN)
 
 
+def wait_dom_ready(driver, timeout):
+    WebDriverWait(driver, timeout).until(
+        lambda driver: driver.execute_script("return document.readyState") == "complete"
+    )
+
+
 def wait_element_until_visible_by_css_selector(driver, timeout, css_selector):
     return WebDriverWait(driver, timeout).until(
         EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector))
@@ -173,3 +179,34 @@ def add_months_to_month_year(month_year, number_of_months_added):
 
 def raise_date_is_not_spported(date_value):
     raise RuntimeError("The date {} is not supported.".format(date_value))
+
+
+def assemble_quotes(scraping_request, scraping_response):
+    """A quote is composed of a head and a body. The data of the head comes from a scraping
+    request. The data of the body comes from a scrapng response."""
+
+    def is_meaningful_price(quote_body):
+        price = quote_body["price"]
+        return price is not None
+
+    quotes = []
+
+    quote_head = {
+        "company_id": scraping_request["company_id"],
+        "rental_route_id": scraping_request["rental_route_id"],
+        "pick_up_date_id": scraping_request["pick_up_date_id"],
+        "pick_up_time_id": scraping_request["pick_up_time_id"],
+        "rental_duration_id": scraping_request["rental_duration_id"],
+        "created_on": datetime.now(),
+    }
+
+    scraping_response = list(filter(is_meaningful_price, scraping_response))
+
+    if len(scraping_response) == 0:
+        quotes.append({**quote_head})
+    else:
+        for quote_body in scraping_response:
+            quote = {**quote_head, **quote_body}
+            quotes.append(quote)
+
+    return quotes

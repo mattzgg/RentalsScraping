@@ -29,7 +29,7 @@ def scrape_offices():
         driver.get(constants.BUDGET_COMPANY_LOCATIONS_PAGE_URL)
 
         location_links = wait_elements_until_visible_by_css_selector(
-            driver, constants.SCRAPE_TIMEOUT, ".wl-location-state li a"
+            driver, constants.WAIT_ELEMENT_TIMEOUT, ".wl-location-state li a"
         )
         __scrape_office_enhanced = with_random_delay(__scrape_office)
         offices = []
@@ -66,9 +66,9 @@ def __scrape_office(driver, location_link):
     driver.switch_to.window(new_window_handle)
 
     try:
-        pick_up_location_input = WebDriverWait(driver, constants.SCRAPE_TIMEOUT).until(
-            html_input_has_value((By.CSS_SELECTOR, "#PicLoc_value"))
-        )
+        pick_up_location_input = WebDriverWait(
+            driver, constants.WAIT_ELEMENT_TIMEOUT
+        ).until(html_input_has_value((By.CSS_SELECTOR, "#PicLoc_value")))
     except:
         print_exception("Can't get the address of the office: {}".format(name))
     else:

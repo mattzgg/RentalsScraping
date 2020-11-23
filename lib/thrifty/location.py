@@ -22,7 +22,9 @@ def scrape_offices():
 
         catalogue_content_wrapper_css_selector = ".catalogue__content-wrapper"
         wait_elements_until_visible_by_css_selector(
-            driver, constants.SCRAPE_TIMEOUT, catalogue_content_wrapper_css_selector
+            driver,
+            constants.WAIT_ELEMENT_TIMEOUT,
+            catalogue_content_wrapper_css_selector,
         )
 
         offices = []
