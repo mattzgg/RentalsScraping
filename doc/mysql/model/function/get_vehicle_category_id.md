@@ -73,7 +73,7 @@ BEGIN
 		ELSEIF _vehicle_category_name_in_company = 'Large Cars / SUVs'
 			and _vehicle_category_description = 'Hyundai Tucson or similar'
             and _vehicle_age_description = '1 year(s) old' THEN
-			SET _vehicle_category_name = 'Compact SUV 2WD';
+			SET _vehicle_category_name = 'Intermediate SUV 2WD';
 		ELSEIF _vehicle_category_name_in_company = 'Large Cars / SUVs'
 			and _vehicle_category_description = 'Toyota Camry Hybrid'
             and _vehicle_age_description = '4 - 5 year(s) old' THEN

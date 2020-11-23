@@ -2,7 +2,7 @@
 CREATE PROCEDURE `get_scraping_request_statistics` (
 	IN in_scraping_date_str VARCHAR(10), -- %d/%m/%Y
     OUT out_total_count INT,
-    OUT out_fulfilled_count INT
+    OUT out_processed_count INT
 )
 BEGIN
 	DECLARE _scraping_date DATE;
@@ -27,14 +27,14 @@ BEGIN
     SELECT count(*) INTO _rental_duration_count FROM rental_duration;
     SET out_total_count = _company_rental_route_count * _pick_up_time_count * _rental_duration_count;
 
-    -- Get the count of fulfilled scraping requests for the designated day.
+    -- Get the count of processed scraping requests for the designated day.
 	SELECT
 		COUNT(DISTINCT company_id,
 			rental_route_id,
 			pick_up_date_id,
 			pick_up_time_id,
 			rental_duration_id)
-	INTO out_fulfilled_count FROM
+	INTO out_processed_count FROM
 		rental_quote
 	WHERE
 		pick_up_date_id = _pick_up_date_id;

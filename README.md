@@ -28,8 +28,8 @@
 -   A **Rental Duration** represents the number of rental days. Adding a rental duration to a pick-up date results in a drop-off date.
 -   When the program starts to run, the **Scraping Date** is the current date and the **Pick-up Date** is the day next to the scraping date. The program keeps running unless it is forced to quit. As time passes, the scraping date is always the current date as time passes. The pick-up date is always the day next to the scraping date.
 -   A **Scraping Request** is an object which encapsulates data required to operate on a car rental company's website to get rental quotes. It consists of a company, a pick-up location, a pick-up date, a pick-up time, a drop-off location, a drop-off date and a drop-off time.
--   A **Fulfilled Scraping Request** is a scraping request whose corresponding rental quotes have been scraped and saved to the database.
--   A **Scraping Request Statistics** is an object which reflects the total number of scraping requests and the number of fullfilled scraping requests for a designated scraping date. The formula to calulcate the total number of scraping requests for a designated scraping date is: **<font color="blue">Number of rental routes \* Number of pick-up times \* Number of rental durations</font>**
+-   A **Processed Scraping Request** is a scraping request whose corresponding rental quotes have been scraped and saved to the database.
+-   A **Scraping Request Statistics** is an object which reflects the total number of scraping requests and the number of processed scraping requests for a designated scraping date. The formula to calulcate the total number of scraping requests for a designated scraping date is: **<font color="blue">Number of rental routes \* Number of pick-up times \* Number of rental durations</font>**
 
 ## Business rules to follow
 
@@ -63,7 +63,7 @@
 -   [debug_msg](./doc/mysql/model/procedure/debug_msg.md)
 -   [get_scraping_request_statistics](./doc/mysql/model/procedure/get_scraping_request_statistics.md)
 -   [get_location_name](./doc/mysql/model/procedure/get_location_name.md)
--   [get_non_fulfilled_scraping_requests](./doc/mysql/model/procedure/get_non_fulfilled_scraping_requests.md)
+-   [get_pending_scraping_requests](./doc/mysql/model/procedure/get_pending_scraping_requests.md)
 -   [refresh_rental_routes](./doc/mysql/model/procedure/refresh_rental_routes.md)
 
 ## Database Functions
@@ -96,3 +96,7 @@ In summary, we have **3** companies, **2045** (784 + 1225 + 36) rental routes, *
 -   Set timezone in MySql workbench: set time_zone = '+13:00';
 -   [WebDriver click() vs JavaScript click()](https://stackoverflow.com/questions/34562061/webdriver-click-vs-javascript-click)
 -   [Selenium WebDriver How to Resolve Stale Element Reference Exception?](https://stackoverflow.com/questions/16166261/selenium-webdriver-how-to-resolve-stale-element-reference-exception)
+-   [ChromeDriver - WebDriver for Chrome](https://chromedriver.chromium.org/)
+-   [Context managers and multiprocessing pools](https://stackoverflow.com/questions/24717468/context-managers-and-multiprocessing-pools)
+-   [multiprocessing.Pool: What's the difference between map_async and imap?](https://stackoverflow.com/questions/26520781/multiprocessing-pool-whats-the-difference-between-map-async-and-imap)
+-   [In what situation do we need to use `multiprocessing.Pool.imap_unordered`?](https://stackoverflow.com/questions/19063238/in-what-situation-do-we-need-to-use-multiprocessing-pool-imap-unordered)

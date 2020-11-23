@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS `rental_quote` (
   `pick_up_time_id` INT NOT NULL,
   `rental_duration_id` INT NOT NULL,
   `vehicle_category_id` INT NULL,
-  `price` DECIMAL(10,2) NOT NULL DEFAULT 0,
+  `price` DECIMAL(10,2) NULL COMMENT 'Null price means the price is N/A',
   `created_on` DATETIME NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_rental_quote_company_idx` (`company_id` ASC) VISIBLE,
@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS `rental_quote` (
   INDEX `fk_rental_quote_pick_up_time1_idx` (`pick_up_time_id` ASC) VISIBLE,
   INDEX `fk_rental_quote_rental_route1_idx` (`rental_route_id` ASC) VISIBLE,
   INDEX `fk_rental_quote_vehicle_category1_idx` (`vehicle_category_id` ASC) VISIBLE,
+  INDEX `unique_rental_quote_idx` (`company_id` ASC, `rental_route_id` ASC, `pick_up_date_id` ASC, `pick_up_time_id` ASC, `rental_duration_id` ASC, `vehicle_category_id` ASC, `price` ASC, `created_on` ASC) VISIBLE,
   CONSTRAINT `fk_rental_quote_company`
     FOREIGN KEY (`company_id`)
     REFERENCES `company` (`id`)
@@ -349,7 +350,7 @@ USE `MBIS680_rentals_prices`$$
 CREATE PROCEDURE `get_scraping_request_statistics` (
 	IN in_scraping_date_str VARCHAR(10), -- %d/%m/%Y
     OUT out_total_count INT,
-    OUT out_fulfilled_count INT
+    OUT out_processed_count INT
 )
 BEGIN
 	DECLARE _scraping_date DATE;
@@ -374,14 +375,14 @@ BEGIN
     SELECT count(*) INTO _rental_duration_count FROM rental_duration;
     SET out_total_count = _company_rental_route_count * _pick_up_time_count * _rental_duration_count;
 
-    -- Get the count of fulfilled scraping requests for the designated day.
+    -- Get the count of processed scraping requests for the designated day.
 	SELECT
 		COUNT(DISTINCT company_id,
 			rental_route_id,
 			pick_up_date_id,
 			pick_up_time_id,
 			rental_duration_id)
-	INTO out_fulfilled_count FROM
+	INTO out_processed_count FROM
 		rental_quote
 	WHERE
 		pick_up_date_id = _pick_up_date_id;
@@ -390,12 +391,12 @@ END$$
 DELIMITER ;
 
 -- -----------------------------------------------------
--- procedure get_non_fulfilled_scraping_requests
+-- procedure get_pending_scraping_requests
 -- -----------------------------------------------------
 
 DELIMITER $$
 USE `MBIS680_rentals_prices`$$
-CREATE PROCEDURE `get_non_fulfilled_scraping_requests` (
+CREATE PROCEDURE `get_pending_scraping_requests` (
 	IN in_scraping_date_str VARCHAR(10), -- %d/%m/%Y
     IN in_offset INT,
     IN in_row_count INT
@@ -460,7 +461,7 @@ CREATE FUNCTION `get_vehicle_category_id`(
 	_company_id INT,
     _vehicle_category_name_in_company VARCHAR(128), -- vehicle category name scraped from website
     _vehicle_category_description VARCHAR(128), -- mandatory if company is GO Rentals
-    _vehicle_age_description VARCHAR(32)
+    _vehicle_age_description VARCHAR(32) -- mandatory if company is GO Rentals
 ) RETURNS INT
 DETERMINISTIC
 BEGIN
@@ -489,8 +490,14 @@ BEGIN
 			SET _vehicle_category_name = 'Fullsize AWD (seats 5-7 passengers)';
 		ELSEIF _vehicle_category_name_in_company = 'Premium SUV' THEN
 			SET _vehicle_category_name = _vehicle_category_name_in_company;
-		ELSEIF _vehicle_category_name_in_company = 'Premium UTE' THEN
+		ELSEIF _vehicle_category_name_in_company = 'Premium Ute' THEN
 			SET _vehicle_category_name = 'Utility Vehicle with towbar';
+		ELSEIF _vehicle_category_name_in_company = 'Premium Minivan' THEN
+			SET _vehicle_category_name = 'Luxury Van';
+		ELSEIF _vehicle_category_name_in_company = 'Compact Hybrid' THEN
+			SET _vehicle_category_name = 'Compact Hybrid Car';
+		ELSEIF _vehicle_category_name_in_company = 'Standard SUV' THEN
+			SET _vehicle_category_name = 'Intermediate SUV 2WD';
 		END IF;
 	ELSEIF _company_id = 3 then -- vehicle category name in GO Rentals need to be changed in the following way
 		IF _vehicle_category_name_in_company = 'Small Cars'
@@ -524,7 +531,7 @@ BEGIN
 		ELSEIF _vehicle_category_name_in_company = 'Large Cars / SUVs'
 			and _vehicle_category_description = 'Hyundai Tucson or similar'
             and _vehicle_age_description = '1 year(s) old' THEN
-			SET _vehicle_category_name = 'Compact SUV 2WD';
+			SET _vehicle_category_name = 'Intermediate SUV 2WD';
 		ELSEIF _vehicle_category_name_in_company = 'Large Cars / SUVs'
 			and _vehicle_category_description = 'Toyota Camry Hybrid'
             and _vehicle_age_description = '4 - 5 year(s) old' THEN
@@ -618,7 +625,7 @@ SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 -- initialize the company table
 insert into company(id, name) values(1, 'Thrifty');
 insert into company(id, name) values(2, 'Budget');
-insert into company(id, name) values(3, 'GO Rentals');
+insert into company(id, name) values(3, 'GO rentals');
 commit;
 
 -- initialze the rental_duration table
@@ -627,8 +634,36 @@ insert into rental_duration(id, number_of_days) values(2, 2);
 insert into rental_duration(id, number_of_days) values(3, 3);
 insert into rental_duration(id, number_of_days) values(4, 4);
 insert into rental_duration(id, number_of_days) values(5, 5);
+commit;
 
 -- initialze the pick_up_time table
 insert into pick_up_time(id, value) values(1, sec_to_time(10*60*60)); -- 10:00 AM
 insert into pick_up_time(id, value) values(2, sec_to_time(14*60*60)); -- 02:00 PM
+commit;
+
+-- initialize the vehicle_category table
+insert into vehicle_category(id, name, description) values(1, 'Economy Car', 'Toyota Yaris or similar');
+insert into vehicle_category(id, name, description) values(2, 'Compact Auto', 'Toyota Corolla, Hyundai Accent or similar');
+insert into vehicle_category(id, name, description) values(3, 'Compact SUV 2WD', 'Holden Trax or similar');
+insert into vehicle_category(id, name, description) values(4, 'Intermediate SUV AWD', 'Toyota RAV4 or similar');
+insert into vehicle_category(id, name, description) values(5, 'Fullsize AWD (seats 5-7 passengers)', 'Hyundai Santa Fe or Similar');
+insert into vehicle_category(id, name, description) values(6, 'Passenger Van', 'Toyota Hiace or similar');
+insert into vehicle_category(id, name, description) values(7, 'Utility Vehicle with towbar', 'Toyota Hilux with towbar or similar');
+insert into vehicle_category(id, name, description) values(8, 'Intermediate SUV 2WD', 'Mitsubishi Eclipse or similar');
+insert into vehicle_category(id, name, description) values(9, 'Luxury Van', 'Hyundai iMax');
+insert into vehicle_category(id, name, description) values(10, 'Electric Vehicle', 'Hyundai IONIQ with 200km range');
+insert into vehicle_category(id, name, description) values(11, 'Intermediate Car', 'Hyundai Elantra or similar');
+insert into vehicle_category(id, name, description) values(12, 'Full Size Car', 'Toyota Camry or similar');
+insert into vehicle_category(id, name, description) values(13, 'Full Size Elite Car', 'Holden Commodore or similar');
+insert into vehicle_category(id, name, description) values(14, 'Full Size Hybrid Car', 'Toyota Camry Hybrid or similar');
+insert into vehicle_category(id, name, description) values(15, 'Premium SUV', 'Toyota Prado or similar');
+insert into vehicle_category(id, name, description) values(16, 'Compact Auto[3 year(s) old]', 'Toyota Corolla Hatch');
+insert into vehicle_category(id, name, description) values(17, 'Compact Auto[4 - 5 year(s) old]', 'Toyota Corolla Hatch');
+insert into vehicle_category(id, name, description) values(18, 'Intermediate Car[5 year(s) old]', 'Toyota Corolla Sedan');
+insert into vehicle_category(id, name, description) values(19, 'Intermediate Car[2 - 3 year(s) old]', 'Toyota Corolla Sedan');
+insert into vehicle_category(id, name, description) values(20, 'Passenger Van[10 Seats]', 'Toyota Hiace (10 Seater)');
+insert into vehicle_category(id, name, description) values(21, 'Luggage Trailer', 'Luggage Trailer');
+insert into vehicle_category(id, name, description) values(22, 'Manual Cars', 'Toyota Corolla Manual');
+insert into vehicle_category(id, name, description) values(23, 'Compact Hybrid Car', 'Toyota Corolla Hybrid or similar');
+commit;
 -- end attached script 'script'
