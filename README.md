@@ -103,3 +103,5 @@ In summary, we have **3** companies, **2045** (784 + 1225 + 36) rental routes, *
 -   Add RentalsScraping to /usr/local/bin
     -   `ln -s [The absolute path to bin/scrape_quotes.py] /usr/local/bin/scrape-quotes`
     -   `chmod 755 /usr/local/bin/scrape-quotes`
+-   [Logging in Python](https://realpython.com/python-logging/)
+-   [Python3: Logging With Multiprocessing](https://medium.com/@jonathonbao/python3-logging-with-multiprocessing-f51f460b8778)
