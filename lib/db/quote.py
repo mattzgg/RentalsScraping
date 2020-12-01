@@ -109,7 +109,7 @@ class QuoteCache:
                         quote["pick_up_time_id"],
                         quote["rental_duration_id"],
                         quote["company_id"],
-                        quote["vehicle_category_name_in_company"],
+                        quote["vehicle_category_name"],
                         quote["vehicle_category_description"],
                         quote["vehicle_age_description"],
                         quote["price"],

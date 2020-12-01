@@ -276,9 +276,7 @@ def __parse_select_my_vehicle_response(driver, scraping_request):
     available_car_boxes = soup.select(".available-car-box")
     scraping_response = []
     for available_car_box in available_car_boxes:
-        vehicle_category_name_in_company = str(
-            available_car_box.select_one("h3").string
-        )
+        vehicle_category_name = str(available_car_box.select_one("h3").string)
         price_element = available_car_box.select_one(".paynow price")
         price = None
         if price_element:
@@ -287,7 +285,7 @@ def __parse_select_my_vehicle_response(driver, scraping_request):
         # For Budget, vehicle category description and vehicle age description are optional
         scraping_response.append(
             {
-                "vehicle_category_name_in_company": vehicle_category_name_in_company,
+                "vehicle_category_name": vehicle_category_name,
                 "vehicle_category_description": "",
                 "vehicle_age_description": "",
                 "price": price,

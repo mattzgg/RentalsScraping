@@ -205,7 +205,7 @@ def __parse_find_a_vehicle_response(driver, scraping_request):
     vehicle_elements = soup.select(".booking-steps__content .vehicle")
     scraping_response = []
     for vehicle_element in vehicle_elements:
-        vehicle_category_name_in_company = str(
+        vehicle_category_name = str(
             vehicle_element.select_one("p.vehicle__p > strong").string
         )
         price_element = vehicle_element.select_one("span.vehicle__total > span.text")
@@ -216,7 +216,7 @@ def __parse_find_a_vehicle_response(driver, scraping_request):
         # For Thrifty, vehicle category description and vehicle age description are optional
         scraping_response.append(
             {
-                "vehicle_category_name_in_company": vehicle_category_name_in_company,
+                "vehicle_category_name": vehicle_category_name,
                 "vehicle_category_description": "",
                 "vehicle_age_description": "",
                 "price": price,

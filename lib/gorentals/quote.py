@@ -217,7 +217,7 @@ def __parse_find_my_car_response(driver, scraping_request):
     vehicle_category_sections = soup.select("main > content > section > content > div")
     scraping_response = []
     for vehicle_category_section in vehicle_category_sections:
-        vehicle_category_name_in_company = str(vehicle_category_section.h2.string)
+        vehicle_category_name = str(vehicle_category_section.h2.string)
         quote_articles = vehicle_category_section.select("article")
         for quote_article in quote_articles:
             vehicle_category_description = str(quote_article.header.h2.string)
@@ -229,7 +229,7 @@ def __parse_find_my_car_response(driver, scraping_request):
             price = extract_price(price_text)
             scraping_response.append(
                 {
-                    "vehicle_category_name_in_company": vehicle_category_name_in_company,
+                    "vehicle_category_name": vehicle_category_name,
                     "vehicle_category_description": vehicle_category_description,
                     "vehicle_age_description": vehicle_age_description,
                     "price": price,
