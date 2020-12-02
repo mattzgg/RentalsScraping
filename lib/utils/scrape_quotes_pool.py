@@ -12,8 +12,9 @@ driver_manager = None
 
 
 class DriverManager:
-    def __init__(self, driver_creator):
-        self.driver = driver_creator()
+    def __init__(self, driver_creator, scraping_config):
+        self.driver = driver_creator(scraping_config)
+        self.scraping_config = scraping_config
 
     def __enter__(self):
         self.driver.maximize_window()
@@ -30,7 +31,8 @@ def sqp_initializer(*args):
 
     global driver_manager
     driver_creator = args[0]
-    driver_manager = DriverManager(driver_creator)
+    scraping_config = args[1]
+    driver_manager = DriverManager(driver_creator, scraping_config)
     driver_manager.__enter__()
     Finalize(driver_manager, driver_manager.__exit__, exitpriority=16)
 
@@ -60,7 +62,9 @@ def sqp_worker(*args):
     global driver_manager
     quotes = assemble_quotes(scraping_request, [])
     try:
-        quotes = scrape_quotes_func(driver_manager.driver, scraping_request)
+        quotes = scrape_quotes_func(
+            driver_manager.driver, driver_manager.scraping_config, scraping_request
+        )
     except QuotesNotAvailableException as qnae:
         print("\n", create_warning(qnae))
     except:

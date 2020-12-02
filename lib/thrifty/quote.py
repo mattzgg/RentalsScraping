@@ -18,7 +18,10 @@ from ..utils.web_scraping import (
 from ..utils.exceptions import QuotesNotAvailableException
 
 
-def scrape_quotes(driver, scraping_request):
+def scrape_quotes(driver, scraping_config, scraping_request):
+    wait_element_timeout = scraping_config["wait_element_timeout"]
+    dom_ready_timeout = scraping_config["dom_ready_timeout"]
+
     def normalize_office_name(office_name):
         # Normalization is required because some location names on the Locations page
         # are different from the counterparts used in the location select.
@@ -37,27 +40,27 @@ def scrape_quotes(driver, scraping_request):
     drop_off_time_value = normalize_time_value(scraping_request["drop_off_time_value"])
 
     driver.get(constants.THRIFTY_BOOKING_PAGE_URL)
-    wait_dom_ready(driver, constants.DOM_READY_TIMEOUT)
+    wait_dom_ready(driver, dom_ready_timeout)
 
-    __fill_select(driver, "pickup-depot", pick_up_office_name)
-    __fill_select(driver, "return-depot", drop_off_office_name)
-    __fill_date_input(driver, "pickup-date", pick_up_date_value)
-    __fill_select(driver, "pickup-time", pick_up_time_value)
-    __fill_date_input(driver, "return-date", drop_off_date_value)
-    __fill_select(driver, "return-time", drop_off_time_value)
+    __fill_select(driver, scraping_config, "pickup-depot", pick_up_office_name)
+    __fill_select(driver, scraping_config, "return-depot", drop_off_office_name)
+    __fill_date_input(driver, scraping_config, "pickup-date", pick_up_date_value)
+    __fill_select(driver, scraping_config, "pickup-time", pick_up_time_value)
+    __fill_date_input(driver, scraping_config, "return-date", drop_off_date_value)
+    __fill_select(driver, scraping_config, "return-time", drop_off_time_value)
 
     # Click the Find a Vehicle button
     find_a_vehicle_button = wait_element_until_visible_by_css_selector(
-        driver, constants.WAIT_ELEMENT_TIMEOUT, "#find_vehicle"
+        driver, wait_element_timeout, "#find_vehicle"
     )
     find_a_vehicle_button.click()
-    wait_dom_ready(driver, constants.DOM_READY_TIMEOUT)
+    wait_dom_ready(driver, dom_ready_timeout)
 
     quotes = assemble_quotes(scraping_request, [])
     try:
         wait_elements_until_visible_by_css_selector(
             driver,
-            constants.WAIT_ELEMENT_TIMEOUT,
+            wait_element_timeout,
             ".booking-steps__content .vehicle",
         )
     except:
@@ -68,10 +71,11 @@ def scrape_quotes(driver, scraping_request):
     return quotes
 
 
-def __fill_select(driver, location_input_id, location_input_value):
+def __fill_select(driver, scraping_config, location_input_id, location_input_value):
+    wait_element_timeout = scraping_config["wait_element_timeout"]
     location_input_css_selector = "#select2-{}-container".format(location_input_id)
     location_input = wait_element_until_visible_by_css_selector(
-        driver, constants.WAIT_ELEMENT_TIMEOUT, location_input_css_selector
+        driver, wait_element_timeout, location_input_css_selector
     )
     location_input.click()
 
@@ -81,24 +85,26 @@ def __fill_select(driver, location_input_id, location_input_value):
         )
     )
     location_option = wait_element_until_visible_by_xpath(
-        driver, constants.WAIT_ELEMENT_TIMEOUT, location_option_xpath
+        driver, wait_element_timeout, location_option_xpath
     )
     location_option.click()
 
 
-def __fill_date_input(driver, date_input_id, date_value):
+def __fill_date_input(driver, scraping_config, date_input_id, date_value):
+    wait_element_timeout = scraping_config["wait_element_timeout"]
+
     def calculate_month_year_difference(driver, target_month_year):
         """Calculate the difference required to decide whether to adjust the date picker."""
         current_month_label_css_selector = "#{}_root .picker__month".format(
             date_input_id
         )
         current_month_label = wait_element_until_visible_by_css_selector(
-            driver, constants.WAIT_ELEMENT_TIMEOUT, current_month_label_css_selector
+            driver, wait_element_timeout, current_month_label_css_selector
         )
         current_month_label_text = current_month_label.text
         current_year_label_css_selector = "#{}_root .picker__year".format(date_input_id)
         current_year_label = wait_element_until_visible_by_css_selector(
-            driver, constants.WAIT_ELEMENT_TIMEOUT, current_year_label_css_selector
+            driver, wait_element_timeout, current_year_label_css_selector
         )
         current_year_label_text = current_year_label.text
         current_month_year = parse_month_year_text(
@@ -116,14 +122,14 @@ def __fill_date_input(driver, date_input_id, date_value):
 
     def wait_for_target_month_year_to_show(target_month_year):
         # Wait for target month year, or an stale element exception occurs.
-        WebDriverWait(driver, constants.WAIT_ELEMENT_TIMEOUT).until(
+        WebDriverWait(driver, wait_element_timeout).until(
             target_month_year_to_be_visible(target_month_year)
         )
 
     # Open the date picker.
     date_input_css_selector = "#{}".format(date_input_id)
     date_input = wait_element_until_visible_by_css_selector(
-        driver, constants.WAIT_ELEMENT_TIMEOUT, date_input_css_selector
+        driver, wait_element_timeout, date_input_css_selector
     )
     date_input.click()
 
@@ -142,7 +148,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         while prev_counter <= step_count:
             prev_link = wait_element_until_visible_by_css_selector(
                 driver,
-                constants.WAIT_ELEMENT_TIMEOUT,
+                wait_element_timeout,
                 prev_link_css_selector,
             )
             is_prev_link_disabled = check_if_element_has_class(
@@ -166,7 +172,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         while next_counter <= step_count:
             next_link = wait_element_until_visible_by_css_selector(
                 driver,
-                constants.WAIT_ELEMENT_TIMEOUT,
+                wait_element_timeout,
                 next_link_css_selector,
             )
             is_next_link_disabled = check_if_element_has_class(
@@ -192,7 +198,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         + "and normalize-space(text())='{}']"
     ).format(date_input_id, day_text)
     day_link = wait_element_until_visible_by_xpath(
-        driver, constants.WAIT_ELEMENT_TIMEOUT, day_link_xpath
+        driver, wait_element_timeout, day_link_xpath
     )
     day_link_class = day_link.get_attribute("class")
     if "picker__day--disabled" in day_link_class:

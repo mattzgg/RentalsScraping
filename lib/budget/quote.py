@@ -21,7 +21,9 @@ from ..utils.web_scraping import (
 from ..utils.exceptions import QuotesNotAvailableException
 
 
-def scrape_quotes(driver, scraping_request):
+def scrape_quotes(driver, scraping_config, scraping_request):
+    wait_element_timeout = scraping_config["wait_element_timeout"]
+    dom_ready_timeout = scraping_config["dom_ready_timeout"]
     pick_up_office_name = scraping_request["pick_up_office_name"]
     pick_up_office_address = scraping_request["pick_up_office_address"]
     drop_off_office_name = scraping_request["drop_off_office_name"]
@@ -32,31 +34,43 @@ def scrape_quotes(driver, scraping_request):
     drop_off_time_value = scraping_request["drop_off_time_value"]
 
     driver.get(constants.BUDGET_BOOKING_PAGE_URL)
-    wait_dom_ready(driver, constants.DOM_READY_TIMEOUT)
+    wait_dom_ready(driver, dom_ready_timeout)
 
     __fill_location_input(
-        driver, "PicLoc_value", pick_up_office_name, pick_up_office_address
+        driver,
+        scraping_config,
+        "PicLoc_value",
+        pick_up_office_name,
+        pick_up_office_address,
     )
     __fill_location_input(
-        driver, "DropLoc_value", drop_off_office_name, drop_off_office_address
+        driver,
+        scraping_config,
+        "DropLoc_value",
+        drop_off_office_name,
+        drop_off_office_address,
     )
-    __fill_date_input(driver, "from", pick_up_date_value)
-    __fill_time_select(driver, "reservationModel.pickUpTime", pick_up_time_value)
-    __fill_date_input(driver, "to", drop_off_date_value)
-    __fill_time_select(driver, "reservationModel.dropTime", drop_off_time_value)
+    __fill_date_input(driver, scraping_config, "from", pick_up_date_value)
+    __fill_time_select(
+        driver, scraping_config, "reservationModel.pickUpTime", pick_up_time_value
+    )
+    __fill_date_input(driver, scraping_config, "to", drop_off_date_value)
+    __fill_time_select(
+        driver, scraping_config, "reservationModel.dropTime", drop_off_time_value
+    )
 
     # Click the Select My Vehicle button
     select_my_vehicle_button = wait_element_until_visible_by_css_selector(
-        driver, constants.WAIT_ELEMENT_TIMEOUT, "#res-home-select-car"
+        driver, wait_element_timeout, "#res-home-select-car"
     )
     select_my_vehicle_button.click()
-    wait_dom_ready(driver, constants.DOM_READY_TIMEOUT)
+    wait_dom_ready(driver, dom_ready_timeout)
 
     quotes = assemble_quotes(scraping_request, [])
     try:
         wait_elements_until_visible_by_css_selector(
             driver,
-            constants.WAIT_ELEMENT_TIMEOUT,
+            wait_element_timeout,
             ".available-car-box",
         )
     except:
@@ -67,18 +81,21 @@ def scrape_quotes(driver, scraping_request):
     return quotes
 
 
-def __fill_location_input(driver, location_input_id, office_name, office_address):
+def __fill_location_input(
+    driver, scraping_config, location_input_id, office_name, office_address
+):
+    wait_element_timeout = scraping_config["wait_element_timeout"]
     location_input_css_selector = "#{}".format(location_input_id)
     location_input = wait_element_until_visible_by_css_selector(
-        driver, constants.WAIT_ELEMENT_TIMEOUT, location_input_css_selector
+        driver, wait_element_timeout, location_input_css_selector
     )
     location_input_value = constants.BUDGET_LOCATION_INPUT_VALUE_DICT[office_name]
     location_input.clear()
     location_input.send_keys(location_input_value)
 
-    office_address_element = WebDriverWait(
-        driver, constants.WAIT_ELEMENT_TIMEOUT
-    ).until(visibility_of_office_address_element(office_address))
+    office_address_element = WebDriverWait(driver, wait_element_timeout).until(
+        visibility_of_office_address_element(office_address)
+    )
     office_address_element.click()
 
 
@@ -99,14 +116,16 @@ class visibility_of_office_address_element:
             return False
 
 
-def __fill_date_input(driver, date_input_id, date_value):
+def __fill_date_input(driver, scraping_config, date_input_id, date_value):
+    wait_element_timeout = scraping_config["wait_element_timeout"]
+
     def calculate_month_year_difference(
         driver, current_month_year_label_css_selector, target_month_year
     ):
         """Calculate the difference required to decide whether to adjust the date picker."""
         current_month_year_label = wait_element_until_visible_by_css_selector(
             driver,
-            constants.WAIT_ELEMENT_TIMEOUT,
+            wait_element_timeout,
             current_month_year_label_css_selector,
         )
         current_month_year = parse_month_year_text(current_month_year_label.text)
@@ -134,7 +153,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         current_month_year_label_css_selector, target_month_year
     ):
         # Wait for target month year, or an stale element exception occurs.
-        WebDriverWait(driver, constants.WAIT_ELEMENT_TIMEOUT).until(
+        WebDriverWait(driver, wait_element_timeout).until(
             target_month_year_to_be_visible(
                 current_month_year_label_css_selector, target_month_year
             )
@@ -143,7 +162,7 @@ def __fill_date_input(driver, date_input_id, date_value):
     # Open the date picker.
     date_input_css_selector = "#{}".format(date_input_id)
     date_input = wait_element_until_visible_by_css_selector(
-        driver, constants.WAIT_ELEMENT_TIMEOUT, date_input_css_selector
+        driver, wait_element_timeout, date_input_css_selector
     )
     focus_element(driver, date_input)
 
@@ -173,7 +192,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         while prev_counter <= step_count:
             prev_link = wait_element_until_visible_by_css_selector(
                 driver,
-                constants.WAIT_ELEMENT_TIMEOUT,
+                wait_element_timeout,
                 ".ui-datepicker-prev",
             )
             is_prev_link_disabled = check_if_element_has_class(
@@ -198,7 +217,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         while next_counter <= step_count:
             next_link = wait_element_until_visible_by_css_selector(
                 driver,
-                constants.WAIT_ELEMENT_TIMEOUT,
+                wait_element_timeout,
                 ".ui-datepicker-next",
             )
             is_next_link_disabled = check_if_element_has_class(
@@ -228,7 +247,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         )
         try:
             day_link = wait_element_until_visible_by_xpath(
-                driver, constants.WAIT_ELEMENT_TIMEOUT, day_link_xpath
+                driver, wait_element_timeout, day_link_xpath
             )
         except:
             raise_date_is_not_spported(date_value)
@@ -242,7 +261,7 @@ def __fill_date_input(driver, date_input_id, date_value):
         )
         try:
             day_link = wait_element_until_visible_by_xpath(
-                driver, constants.WAIT_ELEMENT_TIMEOUT, day_link_xpath
+                driver, wait_element_timeout, day_link_xpath
             )
         except:
             raise_date_is_not_spported(date_value)
@@ -250,11 +269,12 @@ def __fill_date_input(driver, date_input_id, date_value):
             day_link.click()
 
 
-def __fill_time_select(driver, time_select_name, time_value):
+def __fill_time_select(driver, scraping_config, time_select_name, time_value):
+    wait_element_timeout = scraping_config["wait_element_timeout"]
     time_select_xpath = "//select[@name='" + time_select_name + "']"
     time_select = wait_element_until_visible_by_xpath(
         driver,
-        constants.WAIT_ELEMENT_TIMEOUT,
+        wait_element_timeout,
         time_select_xpath,
     )
     time_select.click()
@@ -266,7 +286,7 @@ def __fill_time_select(driver, time_select_name, time_value):
     time_value = time_value.lstrip("0")
     time_option_xpath = time_select_xpath + "/option[@label='" + time_value + "']"
     time_option = wait_element_until_visible_by_xpath(
-        driver, constants.WAIT_ELEMENT_TIMEOUT, time_option_xpath
+        driver, wait_element_timeout, time_option_xpath
     )
     time_option.click()
 

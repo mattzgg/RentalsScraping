@@ -3,4 +3,4 @@ __pycache__/
 .idea/
 ~*.xlsx
 *test*.*
-lib/db/config.*.ini
+config/db_config.*.ini

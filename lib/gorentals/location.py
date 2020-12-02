@@ -14,28 +14,27 @@ from ..utils.web_scraping import (
 )
 
 
-def scrape_offices():
+def scrape_offices(scraping_config):
     """Returns a list of office objects scraped from the GO Rentals's locations page.
     An office object is composed of a name and address.
     """
-    driver = None
-
+    headless = scraping_config["headless"]
+    wait_element_timeout = scraping_config["wait_element_timeout"]
+    chrome_options = Options()
+    if headless:
+        chrome_options.add_argument("--headless")
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.maximize_window()
+    driver.get(constants.GORENTALS_COMPANY_LOCATIONS_PAGE_URL)
     try:
-        chrome_options = Options()
-        if constants.IS_CHROME_HEADLESS_ENABLED:
-            chrome_options.add_argument("--headless")
-        driver = webdriver.Chrome(options=chrome_options)
-        driver.maximize_window()
-        driver.get(constants.GORENTALS_COMPANY_LOCATIONS_PAGE_URL)
-
         location_links = wait_elements_until_visible_by_xpath(
-            driver, constants.WAIT_ELEMENT_TIMEOUT, "/descendant::ul[2]/li//a"
+            driver, wait_element_timeout, "/descendant::ul[2]/li//a"
         )
         __scrape_office_enhanced = with_random_delay(__scrape_office)
         offices = []
         for location_link in location_links:
             office = convert_tuple_to_dict(
-                __scrape_office_enhanced(driver, location_link),
+                __scrape_office_enhanced(driver, scraping_config, location_link),
                 ["name", "address"],
             )
             offices.append(office)
@@ -46,7 +45,7 @@ def scrape_offices():
     return offices
 
 
-def __scrape_office(driver, location_link):
+def __scrape_office(driver, scraping_config, location_link):
     name = location_link.text
     address = ""
 
@@ -57,11 +56,12 @@ def __scrape_office(driver, location_link):
     driver.switch_to.window(new_window_handle)
     __scroll(driver)
 
+    wait_element_timeout = scraping_config["wait_element_timeout"]
     try:
         # It seems that more time is need to wait for the address to appear.
-        office_address_p = WebDriverWait(
-            driver, constants.WAIT_ELEMENT_TIMEOUT * 6
-        ).until(html_text_has_been_added((By.XPATH, "/descendant::figure[2]//p[2]")))
+        office_address_p = WebDriverWait(driver, wait_element_timeout * 6).until(
+            html_text_has_been_added((By.XPATH, "/descendant::figure[2]//p[2]"))
+        )
     except:
         print_exception("Can't get the address of the office: {}".format(name))
     else:

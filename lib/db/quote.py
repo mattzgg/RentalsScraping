@@ -5,16 +5,21 @@ from ..utils.datatype import convert_tuple_to_dict
 from ..utils.ui import create_info
 
 
-def get_scraping_request_statistics(scraping_date_str):
+def get_scraping_request_statistics(db_connection_parameters, scraping_date_str):
     def invoke_cursor_func(cursor):
         args = [scraping_date_str, 0, 0]
         result_args = cursor.callproc("get_scraping_request_statistics", args)
         return {"total_count": result_args[1], "processed_count": result_args[2]}
 
-    return execute_query(invoke_cursor_func)
+    # Because the get_scraping_request_statistics routine has the side effect of
+    # adding a new pick-up date, so execute_transaction is used instead of
+    # execute_query. Refactor by getting rid of the side effect is needed.
+    return execute_transaction(db_connection_parameters, invoke_cursor_func)
 
 
-def get_pending_scraping_requests(scraping_date_str, offset, row_count):
+def get_pending_scraping_requests(
+    db_connection_parameters, scraping_date_str, offset, row_count
+):
     pending_scraping_request_property_names = [
         "company_id",
         "rental_route_id",
@@ -48,7 +53,7 @@ def get_pending_scraping_requests(scraping_date_str, offset, row_count):
 
         return pending_scraping_requests
 
-    return execute_query(invoke_cursor_func)
+    return execute_query(db_connection_parameters, invoke_cursor_func)
 
 
 class QuoteCache:
@@ -58,8 +63,9 @@ class QuoteCache:
     SRF quotes don't have vehicle category id and their price is 0.
     """
 
-    def __init__(self):
-        QuoteCache.CAPACITY = 1000
+    def __init__(self, config):
+        QuoteCache.DB_CONNECTION_PARAMETERS = config["db_connection_parameters"]
+        QuoteCache.CAPACITY = config["capacity"]
         self._cache = []
         # SQL statement used to insert a normal quote
         self._query_for_normal_quote = """insert into rental_quote(company_id, rental_route_id,
@@ -154,6 +160,6 @@ class QuoteCache:
                 print(info)
 
         try:
-            execute_transaction(invoke_cursor_func)
+            execute_transaction(QuoteCache.DB_CONNECTION_PARAMETERS, invoke_cursor_func)
         finally:
             self._cache = []

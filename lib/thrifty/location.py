@@ -6,24 +6,24 @@ from ..utils import constants
 from ..utils.web_scraping import wait_elements_until_visible_by_css_selector
 
 
-def scrape_offices():
+def scrape_offices(scraping_config):
     """Returns a list of office objects scraped from the Thrifty's locations page.
     An office object is composed of a name and address.
     """
-    driver = None
+    headless = scraping_config["headless"]
+    wait_element_timeout = scraping_config["wait_element_timeout"]
+    chrome_options = Options()
+    if headless:
+        chrome_options.add_argument("--headless")
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.maximize_window()
+    driver.get(constants.THRIFTY_COMPANY_LOCATIONS_PAGE_URL)
 
     try:
-        chrome_options = Options()
-        if constants.IS_CHROME_HEADLESS_ENABLED:
-            chrome_options.add_argument("--headless")
-        driver = webdriver.Chrome(options=chrome_options)
-        driver.maximize_window()
-        driver.get(constants.THRIFTY_COMPANY_LOCATIONS_PAGE_URL)
-
         catalogue_content_wrapper_css_selector = ".catalogue__content-wrapper"
         wait_elements_until_visible_by_css_selector(
             driver,
-            constants.WAIT_ELEMENT_TIMEOUT,
+            wait_element_timeout,
             catalogue_content_wrapper_css_selector,
         )
 
