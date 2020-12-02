@@ -1,6 +1,6 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
-my_path = Path(__file__)
-lib_path = str(my_path.parent.parent)
-sys.path.append(lib_path)
+# Configure the sys.path so that the lib can be found
+root_path = Path(__file__, "../..").resolve()
+sys.path.append(str(root_path))

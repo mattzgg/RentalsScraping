@@ -1,9 +1,28 @@
+import configparser
 from mysql import connector
-from ..utils import constants
+from pathlib import Path
+
+connection_parameters = None
+
+
+def configure_connection(config_file_name):
+    config_file_path = Path(Path(__file__), "..", config_file_name).resolve()
+    config_parser = configparser.ConfigParser()
+    config_parser.read(config_file_path)
+    connection_parameters_section = config_parser["ConnectionParameters"]
+
+    global connection_parameters
+    connection_parameters = {
+        "host": connection_parameters_section.get("host"),
+        "database": connection_parameters_section.get("database"),
+        "user": connection_parameters_section.get("user"),
+        "password": connection_parameters_section.get("password"),
+        "time_zone": connection_parameters_section.get("time_zone"),
+    }
 
 
 def get_db_connection(autocommit=True):
-    cnx = connector.connect(**constants.RENTALS_SCRAPING_DB_CONNECTION_CONIFG)
+    cnx = connector.connect(**connection_parameters)
     cnx.autocommit = autocommit
     return cnx
 

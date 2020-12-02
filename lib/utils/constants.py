@@ -17,14 +17,6 @@ GORENTALS_COMPANY_LOCATIONS_PAGE_URL = (
 )
 GORENTALS_BOOKING_PAGE_URL = "https://www.gorentals.co.nz/"
 
-RENTALS_SCRAPING_DB_CONNECTION_CONIFG = {
-    "host": "stratford.cafcotgpxc6f.ap-southeast-2.rds.amazonaws.com",
-    "database": "MBIS680_rentals_prices",
-    "user": "admin",
-    "password": "NRtf1zLWXJWdMj7mazKn",
-    "time_zone": "+13:00",
-}
-
 MONTHS = {
     "JANUARY": 1,
     "FEBRUARY": 2,
