@@ -348,6 +348,7 @@ DELIMITER ;
 DELIMITER $$
 USE `MBIS680_rentals_prices`$$
 CREATE PROCEDURE `get_scraping_request_statistics` (
+	IN in_company_id INT,
 	IN in_scraping_date_str VARCHAR(10), -- %d/%m/%Y
     OUT out_total_count INT,
     OUT out_processed_count INT
@@ -370,7 +371,7 @@ BEGIN
 	END IF;
 
     -- Calculate the total count of scraping requests required for a day.
-    SELECT count(*) INTO _company_rental_route_count FROM company_rental_route;
+    SELECT count(*) INTO _company_rental_route_count FROM company_rental_route WHERE company_id = in_company_id;
     SELECT count(*) INTO _pick_up_time_count FROM pick_up_time;
     SELECT count(*) INTO _rental_duration_count FROM rental_duration;
     SET out_total_count = _company_rental_route_count * _pick_up_time_count * _rental_duration_count;
@@ -385,7 +386,8 @@ BEGIN
 	INTO out_processed_count FROM
 		rental_quote
 	WHERE
-		pick_up_date_id = _pick_up_date_id;
+		company_id = in_company_id AND
+        pick_up_date_id = _pick_up_date_id;
 END$$
 
 DELIMITER ;
@@ -397,6 +399,7 @@ DELIMITER ;
 DELIMITER $$
 USE `MBIS680_rentals_prices`$$
 CREATE PROCEDURE `get_pending_scraping_requests` (
+	IN in_company_id INT,
 	IN in_scraping_date_str VARCHAR(10), -- %d/%m/%Y
     IN in_offset INT,
     IN in_row_count INT
@@ -433,6 +436,7 @@ BEGIN
 			pick_up_time t3,
 			rental_duration t4
 		WHERE
+			t1.company_id = in_company_id AND
 			t2.id = _pick_up_date_id AND
 			NOT EXISTS( SELECT
 					id

@@ -1,5 +1,6 @@
 ```sql
 CREATE PROCEDURE `get_pending_scraping_requests` (
+	IN in_company_id INT,
 	IN in_scraping_date_str VARCHAR(10), -- %d/%m/%Y
     IN in_offset INT,
     IN in_row_count INT
@@ -36,6 +37,7 @@ BEGIN
 			pick_up_time t3,
 			rental_duration t4
 		WHERE
+			t1.company_id = in_company_id AND
 			t2.id = _pick_up_date_id AND
 			NOT EXISTS( SELECT
 					id

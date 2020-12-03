@@ -5,11 +5,18 @@ from ..utils.datatype import convert_tuple_to_dict
 from ..utils.ui import create_info
 
 
-def get_scraping_request_statistics(db_connection_parameters, scraping_date_str):
+def get_scraping_request_statistics(
+    db_connection_parameters, company_id, scraping_date_str
+):
     def invoke_cursor_func(cursor):
-        args = [scraping_date_str, 0, 0]
+        args = [company_id, scraping_date_str, 0, 0]
         result_args = cursor.callproc("get_scraping_request_statistics", args)
-        return {"total_count": result_args[1], "processed_count": result_args[2]}
+        return {
+            "company_id": company_id,
+            "scraping_date_str": scraping_date_str,
+            "total_count": result_args[2],
+            "processed_count": result_args[3],
+        }
 
     # Because the get_scraping_request_statistics routine has the side effect of
     # adding a new pick-up date, so execute_transaction is used instead of
@@ -18,7 +25,7 @@ def get_scraping_request_statistics(db_connection_parameters, scraping_date_str)
 
 
 def get_pending_scraping_requests(
-    db_connection_parameters, scraping_date_str, offset, row_count
+    db_connection_parameters, company_id, scraping_date_str, offset, row_count
 ):
     pending_scraping_request_property_names = [
         "company_id",
@@ -46,7 +53,7 @@ def get_pending_scraping_requests(
         pending_scraping_requests = []
         cursor.callproc(
             "get_pending_scraping_requests",
-            [scraping_date_str, offset, row_count],
+            [company_id, scraping_date_str, offset, row_count],
         )
         for result in cursor.stored_results():
             pending_scraping_requests = list(map(convert_func, result.fetchall()))

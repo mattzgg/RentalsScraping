@@ -33,6 +33,24 @@ def parse_args():
         help=get_db_config_file_name_help(),
     )
     parser.add_argument(
+        "--company-ids",
+        nargs="+",
+        type=int,
+        default=[
+            constants.THRIFTY_COMPANY_ID,
+            constants.BUDGET_COMPANY_ID,
+            constants.GORENTALS_COMPANY_ID,
+        ],
+        help=(
+            "A list of car rental company id, defaults to %(default)s. "
+            + "Thrifty: {}, Budget: {}, GO rentals: {}"
+        ).format(
+            constants.THRIFTY_COMPANY_ID,
+            constants.BUDGET_COMPANY_ID,
+            constants.GORENTALS_COMPANY_ID,
+        ),
+    )
+    parser.add_argument(
         "--wait-element-timeout",
         type=int,
         default=10,
@@ -71,6 +89,7 @@ def parse_args():
 
     return {
         "db_connection_parameters": db_connection_parameters,
+        "company_ids": args.company_ids,
         "scraping_config": {
             "wait_element_timeout": args.wait_element_timeout,
             "dom_ready_timeout": args.dom_ready_timeout,
@@ -101,34 +120,92 @@ def format_today():
     return datetime.today().strftime("%d/%m/%Y")
 
 
-def raise_scraping_date_passed_exception(db_connection_parameters, scraping_date_str):
-    scraping_request_statistics = get_scraping_request_statistics(
-        db_connection_parameters, scraping_date_str
+def check_if_scraping_date_passed(
+    db_connection_parameters, company_ids, scraping_date_str
+):
+    current_date_str = format_today()
+    if current_date_str != scraping_date_str:
+        scraping_request_statistics_list = get_scraping_request_statistics_list(
+            db_connection_parameters, company_ids, scraping_date_str
+        )
+        cumulative_scraping_request_statistics = (
+            get_cumulative_scraping_request_statistics(scraping_request_statistics_list)
+        )
+        cumulative_total_count = cumulative_scraping_request_statistics["total_count"]
+        cumulative_processed_count = cumulative_scraping_request_statistics[
+            "processed_count"
+        ]
+        cumulative_pending_count = cumulative_total_count - cumulative_processed_count
+        raise RuntimeError(
+            (
+                "The scraping date {} passed, scraping for it has been interrupted."
+                + "{} pending scraping requests have been skipped"
+            ).format(scraping_date_str, cumulative_pending_count)
+        )
+
+
+def get_scraping_request_statistics_list(
+    db_connection_parameters, company_ids, scraping_date_str
+):
+    return list(
+        map(
+            lambda company_id: get_scraping_request_statistics(
+                db_connection_parameters, company_id, scraping_date_str
+            ),
+            company_ids,
+        )
     )
-    total_count = scraping_request_statistics["total_count"]
-    processed_count = scraping_request_statistics["processed_count"]
-    pending_count = total_count - processed_count
-    raise RuntimeError(
-        (
-            "The scraping date {} passed, scraping for it has been interrupted."
-            + "{} pending scraping requests have been skipped"
-        ).format(scraping_date_str, pending_count)
+
+
+def get_cumulative_scraping_request_statistics(scraping_request_statistics_list):
+    return {
+        "total_count": sum(
+            map(lambda item: item["total_count"], scraping_request_statistics_list)
+        ),
+        "processed_count": sum(
+            map(
+                lambda item: item["processed_count"],
+                scraping_request_statistics_list,
+            )
+        ),
+    }
+
+
+def get_ids_of_companies_with_workload(scraping_request_statistics_list):
+    return list(
+        map(
+            lambda item: item["company_id"],
+            filter(
+                lambda item: item["processed_count"] < item["total_count"],
+                scraping_request_statistics_list,
+            ),
+        )
     )
 
 
 def main():
     args = parse_args()
     db_connection_parameters = args["db_connection_parameters"]
+    company_ids = args["company_ids"]
 
     while True:
         try:
             scraping_date_str = format_today()
-            scraping_request_statistics = get_scraping_request_statistics(
-                db_connection_parameters, scraping_date_str
+            scraping_request_statistics_list = get_scraping_request_statistics_list(
+                db_connection_parameters, company_ids, scraping_date_str
             )
-            total_count = scraping_request_statistics["total_count"]
-            processed_count = scraping_request_statistics["processed_count"]
-            if processed_count == total_count:
+            cumulative_scraping_request_statistics = (
+                get_cumulative_scraping_request_statistics(
+                    scraping_request_statistics_list
+                )
+            )
+            cumulative_total_count = cumulative_scraping_request_statistics[
+                "total_count"
+            ]
+            cumulative_processed_count = cumulative_scraping_request_statistics[
+                "processed_count"
+            ]
+            if cumulative_processed_count == cumulative_total_count:
                 print(
                     create_info(
                         "All of today's scraping requests have been executed. "
@@ -141,11 +218,15 @@ def main():
             # The progress bar shows how many scraping requests have been processed.
             progress_bar = ChargingBar(
                 "Scraping quotes on {}".format(scraping_date_str),
-                max=total_count,
+                max=cumulative_total_count,
                 color="green",
                 suffix="%(percent)d%%, %(index)d/%(max)d, %(elapsed_td)s",
             )
-            progress_bar.goto(processed_count)
+            progress_bar.goto(cumulative_processed_count)
+
+            ids_of_companies_with_workload = get_ids_of_companies_with_workload(
+                scraping_request_statistics_list
+            )
 
             # The quote cache boosts the performance of saving data to the database.
             quote_cache = QuoteCache(args["cache_config"])
@@ -158,45 +239,53 @@ def main():
                     args["scraping_config"],
                 ),
             ) as pool:
-                while True:
-                    try:
-                        pending_scraping_requests = get_pending_scraping_requests(
-                            db_connection_parameters,
-                            scraping_date_str,
-                            0,
-                            args["batch_size"],
-                        )
+                try:
+                    for company_id in ids_of_companies_with_workload:
+                        while True:
+                            try:
+                                pending_scraping_requests = (
+                                    get_pending_scraping_requests(
+                                        db_connection_parameters,
+                                        company_id,
+                                        scraping_date_str,
+                                        0,
+                                        args["batch_size"],
+                                    )
+                                )
 
-                        pending_scraping_requests_count = len(pending_scraping_requests)
-                        # There are no more pending scraping requests.
-                        if pending_scraping_requests_count == 0:
-                            progress_bar.finish()
-                            pool.close()
-                            pool.join()
-                            break
-
-                        for result in pool.imap(sqp_worker, pending_scraping_requests):
-                            while True:
-                                is_added = quote_cache.add_quotes(result)
-                                if not is_added:
-                                    # Flush then add again.
-                                    quote_cache.flush()
-                                else:
+                                pending_scraping_requests_count = len(
+                                    pending_scraping_requests
+                                )
+                                if pending_scraping_requests_count == 0:
+                                    # All pending scraping requests have been processed for the company
                                     break
 
-                            progress_bar.next()
-                    except:
-                        pool.close()
-                        pool.join()
-                        raise
-                    finally:
-                        quote_cache.flush()
+                                for result in pool.imap(
+                                    sqp_worker, pending_scraping_requests
+                                ):
+                                    while True:
+                                        is_added = quote_cache.add_quotes(result)
+                                        if not is_added:
+                                            # Flush then add again.
+                                            quote_cache.flush()
+                                        else:
+                                            break
 
-                        current_date_str = format_today()
-                        if current_date_str != scraping_date_str:
-                            raise_scraping_date_passed_exception(
-                                db_connection_parameters, scraping_date_str
-                            )
+                                    progress_bar.next()
+
+                                check_if_scraping_date_passed(
+                                    db_connection_parameters,
+                                    company_ids,
+                                    scraping_date_str,
+                                )
+                            finally:
+                                quote_cache.flush()
+
+                    # All pending scraping requests have been processed
+                    progress_bar.finish()
+                finally:
+                    pool.close()
+                    pool.join()
         except (KeyboardInterrupt, SystemExit):
             print(
                 create_info(

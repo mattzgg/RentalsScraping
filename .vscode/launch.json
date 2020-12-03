@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["db_config.aws.ini"],
+            "args": ["db_config.aws.ini", "--company-ids", "1"],
             "console": "integratedTerminal",
             "subProcess": true
         }
