@@ -39,14 +39,14 @@ def scrape_quotes(driver, scraping_config, scraping_request):
     __fill_location_input(
         driver,
         scraping_config,
-        "PicLoc_value",
+        "#selectCar #PicLoc_value",
         pick_up_office_name,
         pick_up_office_address,
     )
     __fill_location_input(
         driver,
         scraping_config,
-        "DropLoc_value",
+        "#selectCar #DropLoc_value",
         drop_off_office_name,
         drop_off_office_address,
     )
@@ -82,10 +82,9 @@ def scrape_quotes(driver, scraping_config, scraping_request):
 
 
 def __fill_location_input(
-    driver, scraping_config, location_input_id, office_name, office_address
+    driver, scraping_config, location_input_css_selector, office_name, office_address
 ):
     wait_element_timeout = scraping_config["wait_element_timeout"]
-    location_input_css_selector = "#{}".format(location_input_id)
     location_input = wait_element_until_visible_by_css_selector(
         driver, wait_element_timeout, location_input_css_selector
     )
