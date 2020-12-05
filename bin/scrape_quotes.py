@@ -3,13 +3,15 @@ import import_lib
 import time
 import argparse
 import logging
+import signal
+import sys
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.remote.remote_connection import LOGGER as SELENIUM_LOGGER
 from datetime import datetime
 from progress.bar import ChargingBar
-from multiprocessing import Pool, Process, Queue, cpu_count
+from multiprocessing import Pool, Process, Queue, Event, cpu_count
 from pathlib import Path
 
 from lib.utils.constants import (
@@ -113,13 +115,14 @@ def parse_args():
     }
 
 
-def __initialize_logging(log_queue):
+def __initialize_logging(log_queue, sigint_event):
     log_config_file_path = Path(Path(__file__), "../../config/logging.conf").resolve()
     logging_listener = Process(
         target=logging_listener_worker,
         args=(
             log_config_file_path,
             log_queue,
+            sigint_event,
         ),
     )
     logging_listener.start()
@@ -208,23 +211,38 @@ def get_ids_of_companies_with_workload(scraping_request_statistics_list):
     )
 
 
+def __handle_sigint(sig, frame):
+    logger = logging.getLogger(LOGGER_MAIN)
+    logger.info("Ctrl+C have been pressed, RentalsScraping is about to exit.")
+    sys.exit(0)
+
+
 def main():
     args = parse_args()
     db_connection_parameters = args["db_connection_parameters"]
     company_ids = args["company_ids"]
 
+    # Register the custom SIGINT event handler
+    signal.signal(signal.SIGINT, __handle_sigint)
+
+    # This event is used to quit the logging listener process
+    sigint_event = Event()
+
     # Initialize the logging system which supports logging in an enviroment with multiprocessing
     log_queue = Queue(-1)
-    __initialize_logging(log_queue)
+    __initialize_logging(log_queue, sigint_event)
     logger = logging.getLogger(LOGGER_MAIN)
-    logger.info("RentalsScraping started")
+    logger.info("RentalsScraping started.")
 
     while True:
         try:
             scraping_date_str = format_today()
-            logger.info(f"Set the scraping date to: {scraping_date_str}.")
+            logger.info(f"Set the scraping date to {scraping_date_str}.")
             scraping_request_statistics_list = get_scraping_request_statistics_list(
                 db_connection_parameters, company_ids, scraping_date_str
+            )
+            logger.info(
+                f"Scraping request statistics list for {company_ids} and {scraping_date_str} has been fetched."
             )
             cumulative_scraping_request_statistics = (
                 get_cumulative_scraping_request_statistics(
@@ -319,12 +337,8 @@ def main():
                 finally:
                     pool.close()
                     pool.join()
-        except (KeyboardInterrupt, SystemExit):
-            print(
-                create_info(
-                    "\nYou have pressed Ctrl + C, the program will terminate immediately. Bye!"
-                )
-            )
+        except SystemExit:
+            sigint_event.set()
             break
         except:
             print_exception()

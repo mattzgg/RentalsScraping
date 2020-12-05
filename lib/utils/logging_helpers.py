@@ -15,7 +15,7 @@ class CustomRotatingFileHandler(logging.handlers.RotatingFileHandler):
         super().__init__(*args, **kwargs)
 
 
-def logging_listener_worker(log_config_file_path, log_queue):
+def logging_listener_worker(log_config_file_path, log_queue, sigint_event):
     """Whether this configuration can come from a configuration file?"""
     # Ignore the KeyboardInterrupt event in the first place.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -27,7 +27,10 @@ def logging_listener_worker(log_config_file_path, log_queue):
             record = log_queue.get()
             logger = logging.getLogger(record.name)
             logger.handle(record)
-        sleep(1)
+        if sigint_event.is_set():
+            break
+        else:
+            sleep(1)
 
 
 def configure_log_dispatcher(log_queue):
