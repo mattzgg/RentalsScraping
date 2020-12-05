@@ -2,20 +2,29 @@
 import import_lib
 import time
 import argparse
+import logging
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.remote.remote_connection import LOGGER as SELENIUM_LOGGER
 from datetime import datetime
 from progress.bar import ChargingBar
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool, Process, Queue, cpu_count
+from pathlib import Path
 
-from lib.utils import constants
+from lib.utils.constants import (
+    THRIFTY_COMPANY_ID,
+    BUDGET_COMPANY_ID,
+    GORENTALS_COMPANY_ID,
+    LOGGER_MAIN,
+)
 from lib.utils.web_scraping import time_until_end_of_day
 from lib.utils.ui import create_info, print_exception
 from lib.utils.db_config import (
     get_db_config_file_name_help,
     get_db_connection_parameters,
 )
+from lib.utils.logging_helpers import logging_listener_worker, configure_log_dispatcher
 from lib.utils.scrape_quotes_pool import sqp_initializer, sqp_worker
 from lib.db.quote import (
     get_scraping_request_statistics,
@@ -37,17 +46,17 @@ def parse_args():
         nargs="+",
         type=int,
         default=[
-            constants.THRIFTY_COMPANY_ID,
-            constants.BUDGET_COMPANY_ID,
-            constants.GORENTALS_COMPANY_ID,
+            THRIFTY_COMPANY_ID,
+            BUDGET_COMPANY_ID,
+            GORENTALS_COMPANY_ID,
         ],
         help=(
             "A list of car rental company id, defaults to %(default)s. "
             + "Thrifty: {}, Budget: {}, GO rentals: {}"
         ).format(
-            constants.THRIFTY_COMPANY_ID,
-            constants.BUDGET_COMPANY_ID,
-            constants.GORENTALS_COMPANY_ID,
+            THRIFTY_COMPANY_ID,
+            BUDGET_COMPANY_ID,
+            GORENTALS_COMPANY_ID,
         ),
     )
     parser.add_argument(
@@ -104,7 +113,23 @@ def parse_args():
     }
 
 
+def __initialize_logging(log_queue):
+    log_config_file_path = Path(Path(__file__), "../../config/logging.conf").resolve()
+    logging_listener = Process(
+        target=logging_listener_worker,
+        args=(
+            log_config_file_path,
+            log_queue,
+        ),
+    )
+    logging_listener.start()
+
+    configure_log_dispatcher(log_queue)
+
+
 def create_driver(scraping_config):
+    # Selenium outputs copious debug info, so the level should be set to WARNING.
+    SELENIUM_LOGGER.setLevel(logging.WARNING)
     options = Options()
     if scraping_config["headless"]:
         options.add_argument("--headless")
@@ -188,9 +213,16 @@ def main():
     db_connection_parameters = args["db_connection_parameters"]
     company_ids = args["company_ids"]
 
+    # Initialize the logging system which supports logging in an enviroment with multiprocessing
+    log_queue = Queue(-1)
+    __initialize_logging(log_queue)
+    logger = logging.getLogger(LOGGER_MAIN)
+    logger.info("RentalsScraping started")
+
     while True:
         try:
             scraping_date_str = format_today()
+            logger.info(f"Set the scraping date to: {scraping_date_str}.")
             scraping_request_statistics_list = get_scraping_request_statistics_list(
                 db_connection_parameters, company_ids, scraping_date_str
             )
@@ -237,6 +269,7 @@ def main():
                 initargs=(
                     create_driver,
                     args["scraping_config"],
+                    log_queue,
                 ),
             ) as pool:
                 try:

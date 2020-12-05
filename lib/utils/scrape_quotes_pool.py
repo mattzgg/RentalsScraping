@@ -4,6 +4,7 @@ from . import constants
 from .ui import print_exception, create_warning
 from .exceptions import QuotesNotAvailableException
 from .web_scraping import assemble_quotes
+from .logging_helpers import configure_log_dispatcher
 from ..thrifty.quote import scrape_quotes as scrape_quotes_from_thrifty
 from ..budget.quote import scrape_quotes as scrape_quotes_from_budget
 from ..gorentals.quote import scrape_quotes as scrape_quotes_from_gorentals
@@ -35,6 +36,9 @@ def sqp_initializer(*args):
     driver_manager = DriverManager(driver_creator, scraping_config)
     driver_manager.__enter__()
     Finalize(driver_manager, driver_manager.__exit__, exitpriority=16)
+
+    log_queue = args[2]
+    configure_log_dispatcher(log_queue)
 
 
 SCRAPE_QUOTES_FUNCS = dict(

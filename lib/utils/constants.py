@@ -65,3 +65,6 @@ BUDGET_LOCATION_INPUT_VALUE_DICT = {
     "Petone Lower Hutt": "Petone Lower Hutt",
     "Whangarei Airport": "Whangarei",
 }
+
+LOGGER_MAIN = "main"
+LOGGER_WORKER = "worker"
