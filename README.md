@@ -1,5 +1,42 @@
 # RentalsScraping
 
+## Usage
+
+```
+usage: scrape-quotes [-h] [--company-ids COMPANY_IDS [COMPANY_IDS ...]]
+                     [--wait-element-timeout WAIT_ELEMENT_TIMEOUT]
+                     [--dom-ready-timeout DOM_READY_TIMEOUT]
+                     [--pool-size POOL_SIZE] [--batch-size BATCH_SIZE]
+                     [--cache-capacity CACHE_CAPACITY] [--headless]
+                     db_config_file_name
+
+positional arguments:
+  db_config_file_name   The database configuration file name. The available
+                        names is/are: db_config.aws.ini, db_config.uc.ini
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --company-ids COMPANY_IDS [COMPANY_IDS ...]
+                        A list of car rental company id, defaults to [1, 2,
+                        3]. Thrifty: 1, Budget: 2, GO rentals: 3
+  --wait-element-timeout WAIT_ELEMENT_TIMEOUT
+                        The timeout used by the Selenium explicit waits,
+                        defaults to 10 seconds
+  --dom-ready-timeout DOM_READY_TIMEOUT
+                        The timeout used to wait until the document.readyState
+                        becomes complete, defaults to 10 seconds,
+  --pool-size POOL_SIZE
+                        The number of processes that the pool creates to
+                        scrape quotes in parallel, defaults to 8
+  --batch-size BATCH_SIZE
+                        The number of pending scraping requests retrieved from
+                        the database at a time, defaults to 1000
+  --cache-capacity CACHE_CAPACITY
+                        The maximun number of rental quotes that the cache can
+                        accommodate, defaults to 1000
+  --headless            Enable to use headless Chrome
+```
+
 ## Project Dependencies
 
 -   selenium==3.141.0
