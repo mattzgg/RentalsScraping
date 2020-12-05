@@ -10,7 +10,6 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.remote.remote_connection import LOGGER as SELENIUM_LOGGER
 from datetime import datetime
-from progress.bar import ChargingBar
 from multiprocessing import Pool, Process, Queue, Event, cpu_count
 from pathlib import Path
 
@@ -266,15 +265,6 @@ def main():
                 __wait_until_tomorrow()
                 continue
 
-            # The progress bar shows how many scraping requests have been processed.
-            progress_bar = ChargingBar(
-                "Scraping quotes on {}".format(scraping_date_str),
-                max=cumulative_total_count,
-                color="green",
-                suffix="%(percent)d%%, %(index)d/%(max)d, %(elapsed_td)s",
-            )
-            progress_bar.goto(cumulative_processed_count)
-
             ids_of_companies_with_workload = get_ids_of_companies_with_workload(
                 scraping_request_statistics_list
             )
@@ -323,8 +313,6 @@ def main():
                                         else:
                                             break
 
-                                    progress_bar.next()
-
                                 check_if_scraping_date_passed(
                                     db_connection_parameters,
                                     company_ids,
@@ -332,9 +320,6 @@ def main():
                                 )
                             finally:
                                 quote_cache.flush()
-
-                    # All pending scraping requests have been processed
-                    progress_bar.finish()
                 finally:
                     pool.close()
                     pool.join()
