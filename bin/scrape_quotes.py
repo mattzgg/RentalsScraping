@@ -239,7 +239,7 @@ def main():
     log_queue = Queue(-1)
     __initialize_logging(log_queue, sigint_event)
     logger = get_logger(__name__)
-    logger.info("RentalsScraping started.")
+    logger.info("Hello, RentalsScraping has started.")
 
     while True:
         try:
