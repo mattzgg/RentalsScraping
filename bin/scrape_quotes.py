@@ -37,7 +37,7 @@ from lib.db.quote import (
 )
 
 
-def parse_args():
+def __parse_args():
     """Parse the command line arguments"""
     parser = argparse.ArgumentParser()
 
@@ -132,7 +132,7 @@ def __initialize_logging(log_queue, sigint_event):
     configure_log_dispatcher(log_queue)
 
 
-def create_driver(scraping_config):
+def __create_driver(scraping_config):
     # Selenium outputs copious debug info, so the level should be set to WARNING.
     SELENIUM_LOGGER.setLevel(logging.WARNING)
     options = Options()
@@ -146,20 +146,22 @@ def __wait_until_tomorrow():
     time.sleep(time_until_today)
 
 
-def format_today():
+def __format_today():
     return datetime.today().strftime("%d/%m/%Y")
 
 
-def check_if_scraping_date_passed(
+def __check_if_scraping_date_passed(
     db_connection_parameters, company_ids, scraping_date_str
 ):
-    current_date_str = format_today()
+    current_date_str = __format_today()
     if current_date_str != scraping_date_str:
-        scraping_request_statistics_list = get_scraping_request_statistics_list(
+        scraping_request_statistics_list = __get_scraping_request_statistics_list(
             db_connection_parameters, company_ids, scraping_date_str
         )
         cumulative_scraping_request_statistics = (
-            get_cumulative_scraping_request_statistics(scraping_request_statistics_list)
+            __get_cumulative_scraping_request_statistics(
+                scraping_request_statistics_list
+            )
         )
         cumulative_total_count = cumulative_scraping_request_statistics["total_count"]
         cumulative_processed_count = cumulative_scraping_request_statistics[
@@ -174,7 +176,7 @@ def check_if_scraping_date_passed(
         )
 
 
-def get_scraping_request_statistics_list(
+def __get_scraping_request_statistics_list(
     db_connection_parameters, company_ids, scraping_date_str
 ):
     return list(
@@ -187,7 +189,7 @@ def get_scraping_request_statistics_list(
     )
 
 
-def get_cumulative_scraping_request_statistics(scraping_request_statistics_list):
+def __get_cumulative_scraping_request_statistics(scraping_request_statistics_list):
     return {
         "total_count": sum(
             map(lambda item: item["total_count"], scraping_request_statistics_list)
@@ -201,7 +203,7 @@ def get_cumulative_scraping_request_statistics(scraping_request_statistics_list)
     }
 
 
-def get_ids_of_companies_with_workload(scraping_request_statistics_list):
+def __get_ids_of_companies_with_workload(scraping_request_statistics_list):
     return list(
         map(
             lambda item: item["company_id"],
@@ -220,7 +222,7 @@ def __handle_sigint(sig, frame):
 
 
 def main():
-    args = parse_args()
+    args = __parse_args()
     db_connection_parameters = args["db_connection_parameters"]
     company_ids = args["company_ids"]
 
@@ -238,16 +240,16 @@ def main():
 
     while True:
         try:
-            scraping_date_str = format_today()
+            scraping_date_str = __format_today()
             logger.info(f"Set the scraping date to {scraping_date_str}.")
-            scraping_request_statistics_list = get_scraping_request_statistics_list(
+            scraping_request_statistics_list = __get_scraping_request_statistics_list(
                 db_connection_parameters, company_ids, scraping_date_str
             )
             logger.info(
                 f"Scraping request statistics list for {company_ids} and {scraping_date_str} has been fetched."
             )
             cumulative_scraping_request_statistics = (
-                get_cumulative_scraping_request_statistics(
+                __get_cumulative_scraping_request_statistics(
                     scraping_request_statistics_list
                 )
             )
@@ -265,7 +267,7 @@ def main():
                 __wait_until_tomorrow()
                 continue
 
-            ids_of_companies_with_workload = get_ids_of_companies_with_workload(
+            ids_of_companies_with_workload = __get_ids_of_companies_with_workload(
                 scraping_request_statistics_list
             )
 
@@ -276,7 +278,7 @@ def main():
                 processes=args["pool_size"],
                 initializer=sqp_initializer,
                 initargs=(
-                    create_driver,
+                    __create_driver,
                     args["scraping_config"],
                     log_queue,
                 ),
@@ -313,7 +315,7 @@ def main():
                                         else:
                                             break
 
-                                check_if_scraping_date_passed(
+                                __check_if_scraping_date_passed(
                                     db_connection_parameters,
                                     company_ids,
                                     scraping_date_str,
