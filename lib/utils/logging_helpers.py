@@ -38,3 +38,7 @@ def configure_log_dispatcher(log_queue):
     root_logger = logging.getLogger()
     root_logger.addHandler(handler)
     root_logger.setLevel(logging.DEBUG)
+
+
+def get_logger(name):
+    return logging.getLogger(name)

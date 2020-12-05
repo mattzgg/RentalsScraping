@@ -18,10 +18,6 @@
 
     `python -m pip install git+https://github.com/verigak/progress.git@ca6310204e397999ac61ad69f8fba6a7fc775069`
 
--   termcolor==1.1.0
-
-    `pip install termcolor`
-
 ## Concepts
 
 -   A **Rental Route** is defined as a pair of locations. One represents the pick-up location and the other represents the drop-off location. Each car rental company offers customers a number of rental routes.

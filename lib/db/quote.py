@@ -1,8 +1,8 @@
 import pprint
-from datetime import datetime
+import logging
 from .common import execute_query, execute_transaction
 from ..utils.datatype import convert_tuple_to_dict
-from ..utils.ui import create_info
+from ..utils.logging_helpers import get_logger
 
 
 def get_scraping_request_statistics(
@@ -146,6 +146,7 @@ class QuoteCache:
             return len(quote) == 6
 
         def invoke_cursor_func(cursor):
+            logger = get_logger(__name__)
             if self.get_count() > 0:
                 _cache_for_normal_quote = list(
                     filter(filter_normal_quotes, self._cache)
@@ -158,13 +159,9 @@ class QuoteCache:
                 _cache_for_srf_quote = list(filter(filter_srf_quotes, self._cache))
                 if _cache_for_srf_quote:
                     cursor.executemany(self._query_for_srf_quote, _cache_for_srf_quote)
-
-                info = create_info(
-                    "\n{} quotes have been saved to the database.".format(
-                        self.get_count()
-                    )
+                logger.info(
+                    f"{self.get_count()} quotes have been saved to the database."
                 )
-                print(info)
 
         try:
             execute_transaction(QuoteCache.DB_CONNECTION_PARAMETERS, invoke_cursor_func)

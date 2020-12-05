@@ -1,7 +1,7 @@
 import signal
 from multiprocessing.util import Finalize
 from . import constants
-from .ui import print_exception, create_warning
+from .logging_helpers import get_logger
 from .exceptions import QuotesNotAvailableException
 from .web_scraping import assemble_quotes
 from .logging_helpers import configure_log_dispatcher
@@ -60,6 +60,8 @@ SCRAPE_QUOTES_FUNCS = dict(
 
 
 def sqp_worker(*args):
+    logger = get_logger(__name__)
+
     scraping_request = args[0]
     company_id = scraping_request["company_id"]
     scrape_quotes_func = SCRAPE_QUOTES_FUNCS[company_id]
@@ -70,7 +72,7 @@ def sqp_worker(*args):
             driver_manager.driver, driver_manager.scraping_config, scraping_request
         )
     except QuotesNotAvailableException as qnae:
-        print("\n", create_warning(qnae))
+        logger.info(str(qnae))
     except:
-        print_exception()
+        logger.exception("Failed to scrape quotes.")
     return quotes

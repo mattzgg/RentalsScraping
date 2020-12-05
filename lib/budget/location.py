@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 
 from ..utils import constants
 from ..utils.datatype import convert_tuple_to_dict, is_empty_string
-from ..utils.ui import print_exception, create_warning
+from ..utils.logging_helpers import get_logger
 from ..utils.web_scraping import (
     html_input_has_value,
     with_random_delay,
@@ -19,6 +19,8 @@ def scrape_offices(scraping_config):
     """Returns a list of office objects scraped from the Budget's locations page.
     An office object is composed of a name and address.
     """
+    logger = get_logger(__name__)
+
     headless = scraping_config["headless"]
     wait_element_timeout = scraping_config["wait_element_timeout"]
     chrome_options = Options()
@@ -42,11 +44,9 @@ def scrape_offices(scraping_config):
             if not is_empty_string(office["address"]):
                 offices.append(office)
             else:
-                print(
-                    create_warning(
-                        "Office '{}' is excluded because its address is empty.".format(
-                            office["name"]
-                        )
+                logger.info(
+                    "Office '{}' is excluded because its address is empty.".format(
+                        office["name"]
                     )
                 )
     finally:
@@ -58,6 +58,8 @@ def scrape_offices(scraping_config):
 def __scrape_office(driver, scraping_config, location_link):
     name = location_link.text
     address = ""
+
+    logger = get_logger(__name__)
 
     current_window_handle = driver.current_window_handle
     open_link_in_new_tab(location_link)
@@ -71,7 +73,7 @@ def __scrape_office(driver, scraping_config, location_link):
             html_input_has_value((By.CSS_SELECTOR, "#PicLoc_value"))
         )
     except:
-        print_exception("Can't get the address of the office: {}".format(name))
+        logger.exception(f"Can't get the address of the office: {name}")
     else:
         address = pick_up_location_input.get_attribute("value")
     finally:

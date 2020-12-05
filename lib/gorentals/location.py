@@ -1,3 +1,4 @@
+from logging import getLogger
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -5,7 +6,7 @@ from selenium.webdriver.common.by import By
 
 from ..utils import constants
 from ..utils.datatype import convert_tuple_to_dict
-from ..utils.ui import print_exception
+from ..utils.logging_helpers import get_logger
 from ..utils.web_scraping import (
     html_text_has_been_added,
     with_random_delay,
@@ -49,6 +50,8 @@ def __scrape_office(driver, scraping_config, location_link):
     name = location_link.text
     address = ""
 
+    logger = get_logger(__name__)
+
     current_window_handle = driver.current_window_handle
     open_link_in_new_tab(location_link)
     new_window_handle_index = driver.window_handles.index(current_window_handle) + 1
@@ -63,7 +66,7 @@ def __scrape_office(driver, scraping_config, location_link):
             html_text_has_been_added((By.XPATH, "/descendant::figure[2]//p[2]"))
         )
     except:
-        print_exception("Can't get the address of the office: {}".format(name))
+        logger.info(f"Can't get the address of the office: {name}")
     else:
         address = office_address_p.text
     finally:

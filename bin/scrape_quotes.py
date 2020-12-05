@@ -21,12 +21,15 @@ from lib.utils.constants import (
     LOGGER_MAIN,
 )
 from lib.utils.web_scraping import time_until_end_of_day
-from lib.utils.ui import create_info, print_exception
 from lib.utils.db_config import (
     get_db_config_file_name_help,
     get_db_connection_parameters,
 )
-from lib.utils.logging_helpers import logging_listener_worker, configure_log_dispatcher
+from lib.utils.logging_helpers import (
+    logging_listener_worker,
+    configure_log_dispatcher,
+    get_logger,
+)
 from lib.utils.scrape_quotes_pool import sqp_initializer, sqp_worker
 from lib.db.quote import (
     get_scraping_request_statistics,
@@ -231,7 +234,7 @@ def main():
     # Initialize the logging system which supports logging in an enviroment with multiprocessing
     log_queue = Queue(-1)
     __initialize_logging(log_queue, sigint_event)
-    logger = logging.getLogger(LOGGER_MAIN)
+    logger = get_logger(__name__)
     logger.info("RentalsScraping started.")
 
     while True:
@@ -256,11 +259,9 @@ def main():
                 "processed_count"
             ]
             if cumulative_processed_count == cumulative_total_count:
-                print(
-                    create_info(
-                        "All of today's scraping requests have been executed. "
-                        + "I am going to sleep until midnight."
-                    )
+                logger.info(
+                    "All of today's scraping requests have been executed. "
+                    + "RentalsScraping is about to sleep until midnight."
                 )
                 __wait_until_tomorrow()
                 continue
@@ -341,7 +342,7 @@ def main():
             sigint_event.set()
             break
         except:
-            print_exception()
+            logger.exception("Failed to scrape quotes.")
 
 
 if __name__ == "__main__":
