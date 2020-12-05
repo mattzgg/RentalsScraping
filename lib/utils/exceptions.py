@@ -1,4 +1,4 @@
-import pprint
+from lib.utils.data_processing import format_scraping_request
 
 
 class QuotesNotAvailableException(Exception):
@@ -6,8 +6,6 @@ class QuotesNotAvailableException(Exception):
         self.scraping_request = scraping_request
 
     def __str__(self):
-        return (
-            "Quotes are not available for the following scraping request: \n{}".format(
-                pprint.pformat(self.scraping_request)
-            )
+        return "Rental quotes are not available for the scraping request: {}".format(
+            format_scraping_request(self.scraping_request)
         )

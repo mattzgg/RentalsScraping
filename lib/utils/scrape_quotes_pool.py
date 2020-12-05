@@ -3,7 +3,7 @@ from multiprocessing.util import Finalize
 from . import constants
 from .logging_helpers import get_logger
 from .exceptions import QuotesNotAvailableException
-from .web_scraping import assemble_quotes
+from ..utils.data_processing import assemble_quotes, format_scraping_request
 from .logging_helpers import configure_log_dispatcher
 from ..thrifty.quote import scrape_quotes as scrape_quotes_from_thrifty
 from ..budget.quote import scrape_quotes as scrape_quotes_from_budget
@@ -74,5 +74,15 @@ def sqp_worker(*args):
     except QuotesNotAvailableException as qnae:
         logger.info(str(qnae))
     except:
-        logger.exception("Failed to scrape quotes.")
+        logger.exception(
+            "An exeception occurred when processing the scraping request: {}".format(
+                format_scraping_request(scraping_request)
+            )
+        )
+    else:
+        logger.info(
+            "{} rental quotes are available for the scraping request: {}".format(
+                len(quotes), format_scraping_request(scraping_request)
+            )
+        )
     return quotes

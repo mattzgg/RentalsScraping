@@ -1,6 +1,7 @@
 from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
 from ..utils import constants
+from ..utils.data_processing import assemble_quotes
 from ..utils.web_scraping import (
     wait_dom_ready,
     wait_element_until_visible_by_xpath,
@@ -13,7 +14,6 @@ from ..utils.web_scraping import (
     compare_month_year,
     raise_date_is_not_spported,
     add_months_to_month_year,
-    assemble_quotes,
 )
 from ..utils.exceptions import QuotesNotAvailableException
 

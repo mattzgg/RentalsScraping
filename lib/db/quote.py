@@ -1,7 +1,7 @@
 import pprint
 import logging
 from .common import execute_query, execute_transaction
-from ..utils.datatype import convert_tuple_to_dict
+from ..utils.data_processing import convert_tuple_to_dict
 from ..utils.logging_helpers import get_logger
 
 
@@ -67,7 +67,7 @@ class QuoteCache:
     """A simple tool to boost performance for saving quotes to database.
     There are two kinds of quotes. One is for normal quotes. Normal quotes has
     vehicle category id and price. The other is for scraping request fulfillment (SRF).
-    SRF quotes don't have vehicle category id and their price is 0.
+    SRF quotes don't have vehicle category id and price.
     """
 
     def __init__(self, config):
@@ -131,7 +131,7 @@ class QuoteCache:
                 )
             else:
                 raise RuntimeError(
-                    "The following quote is invalid:\n{}".format(pprint(quote))
+                    "The following rental quote is invalid:\n{}".format(pprint(quote))
                 )
 
         return True
@@ -160,7 +160,7 @@ class QuoteCache:
                 if _cache_for_srf_quote:
                     cursor.executemany(self._query_for_srf_quote, _cache_for_srf_quote)
                 logger.info(
-                    f"{self.get_count()} quotes have been saved to the database."
+                    f"{self.get_count()} rental quotes have been saved to the database."
                 )
 
         try:

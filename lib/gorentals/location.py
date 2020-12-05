@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 
 from ..utils import constants
-from ..utils.datatype import convert_tuple_to_dict
+from ..utils.data_processing import convert_tuple_to_dict
 from ..utils.logging_helpers import get_logger
 from ..utils.web_scraping import (
     html_text_has_been_added,

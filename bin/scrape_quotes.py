@@ -17,7 +17,6 @@ from lib.utils.constants import (
     THRIFTY_COMPANY_ID,
     BUDGET_COMPANY_ID,
     GORENTALS_COMPANY_ID,
-    LOGGER_MAIN,
 )
 from lib.utils.web_scraping import time_until_end_of_day
 from lib.utils.db_config import (
@@ -216,7 +215,7 @@ def __get_ids_of_companies_with_workload(scraping_request_statistics_list):
 
 
 def __handle_sigint(sig, frame):
-    logger = logging.getLogger(LOGGER_MAIN)
+    logger = get_logger(__name__)
     logger.info("Ctrl+C have been pressed, RentalsScraping is about to exit.")
     sys.exit(0)
 
@@ -225,6 +224,10 @@ def main():
     args = __parse_args()
     db_connection_parameters = args["db_connection_parameters"]
     company_ids = args["company_ids"]
+    cache_config = args["cache_config"]
+    pool_size = args["pool_size"]
+    scraping_config = args["scraping_config"]
+    batch_size = args["batch_size"]
 
     # Register the custom SIGINT event handler
     signal.signal(signal.SIGINT, __handle_sigint)
@@ -240,13 +243,12 @@ def main():
 
     while True:
         try:
+            logger.info("RentalsScraping begins to work.")
+            logger.info(f"The company ids are {company_ids}.")
             scraping_date_str = __format_today()
-            logger.info(f"Set the scraping date to {scraping_date_str}.")
+            logger.info(f"The scraping date is {scraping_date_str}.")
             scraping_request_statistics_list = __get_scraping_request_statistics_list(
                 db_connection_parameters, company_ids, scraping_date_str
-            )
-            logger.info(
-                f"Scraping request statistics list for {company_ids} and {scraping_date_str} has been fetched."
             )
             cumulative_scraping_request_statistics = (
                 __get_cumulative_scraping_request_statistics(
@@ -259,32 +261,52 @@ def main():
             cumulative_processed_count = cumulative_scraping_request_statistics[
                 "processed_count"
             ]
+            assert cumulative_processed_count <= cumulative_total_count
             if cumulative_processed_count == cumulative_total_count:
                 logger.info(
-                    "All of today's scraping requests have been executed. "
-                    + "RentalsScraping is about to sleep until midnight."
+                    "No pending scraping requests, RentalsScraping is about to sleep until midnight."
                 )
                 __wait_until_tomorrow()
                 continue
+            else:
+                logger.info(
+                    "{} scraping requests in total, {} has been processed, {} are pending.".format(
+                        cumulative_total_count,
+                        cumulative_processed_count,
+                        cumulative_total_count - cumulative_processed_count,
+                    )
+                )
 
             ids_of_companies_with_workload = __get_ids_of_companies_with_workload(
                 scraping_request_statistics_list
             )
+            logger.info(
+                f"The companies with workload are {ids_of_companies_with_workload}."
+            )
 
             # The quote cache boosts the performance of saving data to the database.
-            quote_cache = QuoteCache(args["cache_config"])
+            quote_cache = QuoteCache(cache_config)
+            logger.info(
+                "The cache used to boost performance of saving rental quotes to the database has been created."
+            )
 
             with Pool(
-                processes=args["pool_size"],
+                processes=pool_size,
                 initializer=sqp_initializer,
                 initargs=(
                     __create_driver,
-                    args["scraping_config"],
+                    scraping_config,
                     log_queue,
                 ),
             ) as pool:
+                logger.info(
+                    "The multiprocessing pool used to enable scraping in parallel has been created."
+                )
                 try:
+                    current_cumulative_processed_count = 0
+                    logger.info("Starts to work on companies with workload.")
                     for company_id in ids_of_companies_with_workload:
+                        logger.info(f"Iterates the work on the company {company_id}.")
                         while True:
                             try:
                                 pending_scraping_requests = (
@@ -293,7 +315,7 @@ def main():
                                         company_id,
                                         scraping_date_str,
                                         0,
-                                        args["batch_size"],
+                                        batch_size,
                                     )
                                 )
 
@@ -301,12 +323,25 @@ def main():
                                     pending_scraping_requests
                                 )
                                 if pending_scraping_requests_count == 0:
-                                    # All pending scraping requests have been processed for the company
+                                    logger.info(
+                                        f"Work on the company {company_id} has finished."
+                                    )
                                     break
-
-                                for result in pool.imap(
+                                else:
+                                    logger.info(
+                                        "{} pending scraping requests for the company {} has been fetched.".format(
+                                            pending_scraping_requests_count, company_id
+                                        )
+                                    )
+                                pool_imap_result = pool.imap(
                                     sqp_worker, pending_scraping_requests
-                                ):
+                                )
+                                logger.info(
+                                    "{} pending scraping requests have been submitted to the pool.".format(
+                                        pending_scraping_requests_count
+                                    )
+                                )
+                                for result in pool_imap_result:
                                     while True:
                                         is_added = quote_cache.add_quotes(result)
                                         if not is_added:
@@ -314,6 +349,23 @@ def main():
                                             quote_cache.flush()
                                         else:
                                             break
+                                    logger.info(
+                                        (
+                                            "{} rental quotes have been added to the cache, {} total in the cache now."
+                                        ).format(len(result), quote_cache.get_count())
+                                    )
+
+                                    current_cumulative_processed_count += 1
+                                    current_cumulative_pending_count = (
+                                        cumulative_total_count
+                                        - cumulative_processed_count
+                                        - current_cumulative_processed_count
+                                    )
+                                    logger.info(
+                                        "{} pending scraping requests are remaining now.".format(
+                                            current_cumulative_pending_count,
+                                        )
+                                    )
 
                                 __check_if_scraping_date_passed(
                                     db_connection_parameters,
@@ -322,6 +374,9 @@ def main():
                                 )
                             finally:
                                 quote_cache.flush()
+                    logger.info(
+                        "RentalsScraping finished work on companies with workload. Congrats!"
+                    )
                 finally:
                     pool.close()
                     pool.join()
@@ -329,7 +384,9 @@ def main():
             sigint_event.set()
             break
         except:
-            logger.exception("Failed to scrape quotes.")
+            logger.exception(
+                "An exception occurred, RentalsScrapint is about to restart."
+            )
 
 
 if __name__ == "__main__":
