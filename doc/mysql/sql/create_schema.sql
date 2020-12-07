@@ -287,8 +287,8 @@ BEGIN
 				FROM
 					rental_route t
 				WHERE
-					t.pick_up_location_id = pick_up_location_id
-						AND t.drop_off_location_id = drop_off_location_id);
+					t.pick_up_location_id = pick_up_location.id
+						AND t.drop_off_location_id = drop_off_location.id);
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
 		BEGIN
 			GET DIAGNOSTICS CONDITION 1 @sqlstate = RETURNED_SQLSTATE, @err_no = MYSQL_ERRNO, @err_text = MESSAGE_TEXT;
