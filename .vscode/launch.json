@@ -5,7 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Scrape Offices",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": ["db_config.aws.ini"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Scrape Quotes",
             "type": "python",
             "request": "launch",
             "program": "${file}",

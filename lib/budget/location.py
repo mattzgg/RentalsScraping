@@ -1,3 +1,4 @@
+import logging
 from os import wait
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -6,7 +7,6 @@ from selenium.webdriver.common.by import By
 
 from ..utils import constants
 from ..utils.data_processing import convert_tuple_to_dict, is_empty_string
-from ..utils.logging_helpers import get_logger
 from ..utils.web_scraping import (
     html_input_has_value,
     with_random_delay,
@@ -19,8 +19,9 @@ def scrape_offices(scraping_config):
     """Returns a list of office objects scraped from the Budget's locations page.
     An office object is composed of a name and address.
     """
-    logger = get_logger(__name__)
+    logger = logging.getLogger(__name__)
 
+    logger.info("Scraping Budget's offices begins.")
     headless = scraping_config["headless"]
     wait_element_timeout = scraping_config["wait_element_timeout"]
     chrome_options = Options()
@@ -28,12 +29,15 @@ def scrape_offices(scraping_config):
         chrome_options.add_argument("--headless")
     driver = webdriver.Chrome(options=chrome_options)
     driver.maximize_window()
+    logger.info("Selenium driver is ready.")
     driver.get(constants.BUDGET_COMPANY_LOCATIONS_PAGE_URL)
+    logger.info(f"Selenium driver opens {constants.BUDGET_COMPANY_LOCATIONS_PAGE_URL}")
 
     try:
         location_links = wait_elements_until_visible_by_css_selector(
             driver, wait_element_timeout, ".wl-location-state li a"
         )
+        logger.info("The location links are available now.")
         __scrape_office_enhanced = with_random_delay(__scrape_office)
         offices = []
         for location_link in location_links:
@@ -43,12 +47,18 @@ def scrape_offices(scraping_config):
             )
             if not is_empty_string(office["address"]):
                 offices.append(office)
+                logger.info(
+                    "Office [name: {}, address: {}] is obtained.".format(
+                        office["name"], office["address"]
+                    )
+                )
             else:
                 logger.info(
                     "Office '{}' is excluded because its address is empty.".format(
                         office["name"]
                     )
                 )
+        logger.info("Scraping Budget's offices is finished.")
     finally:
         driver.quit()
 
@@ -59,7 +69,7 @@ def __scrape_office(driver, scraping_config, location_link):
     name = location_link.text
     address = ""
 
-    logger = get_logger(__name__)
+    logger = logging.getLogger(__name__)
 
     current_window_handle = driver.current_window_handle
     open_link_in_new_tab(location_link)

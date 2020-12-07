@@ -1,4 +1,4 @@
-from logging import getLogger
+import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -6,7 +6,6 @@ from selenium.webdriver.common.by import By
 
 from ..utils import constants
 from ..utils.data_processing import convert_tuple_to_dict
-from ..utils.logging_helpers import get_logger
 from ..utils.web_scraping import (
     html_text_has_been_added,
     with_random_delay,
@@ -19,6 +18,9 @@ def scrape_offices(scraping_config):
     """Returns a list of office objects scraped from the GO Rentals's locations page.
     An office object is composed of a name and address.
     """
+    logger = logging.getLogger(__name__)
+
+    logger.info("Scraping GO rentals's offices begins.")
     headless = scraping_config["headless"]
     wait_element_timeout = scraping_config["wait_element_timeout"]
     chrome_options = Options()
@@ -26,11 +28,16 @@ def scrape_offices(scraping_config):
         chrome_options.add_argument("--headless")
     driver = webdriver.Chrome(options=chrome_options)
     driver.maximize_window()
+    logger.info("Selenium driver is ready.")
     driver.get(constants.GORENTALS_COMPANY_LOCATIONS_PAGE_URL)
+    logger.info(
+        f"Selenium driver opens {constants.GORENTALS_COMPANY_LOCATIONS_PAGE_URL}"
+    )
     try:
         location_links = wait_elements_until_visible_by_xpath(
             driver, wait_element_timeout, "/descendant::ul[2]/li//a"
         )
+        logger.info("The location links are available now.")
         __scrape_office_enhanced = with_random_delay(__scrape_office)
         offices = []
         for location_link in location_links:
@@ -39,9 +46,14 @@ def scrape_offices(scraping_config):
                 ["name", "address"],
             )
             offices.append(office)
+            logger.info(
+                "Office [name: {}, address: {}] is obtained.".format(
+                    office["name"], office["address"]
+                )
+            )
+
     finally:
-        if driver:
-            driver.quit()
+        driver.quit()
 
     return offices
 
@@ -50,7 +62,7 @@ def __scrape_office(driver, scraping_config, location_link):
     name = location_link.text
     address = ""
 
-    logger = get_logger(__name__)
+    logger = logging.getLogger(__name__)
 
     current_window_handle = driver.current_window_handle
     open_link_in_new_tab(location_link)
