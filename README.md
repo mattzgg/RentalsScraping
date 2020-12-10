@@ -47,7 +47,7 @@ optional arguments:
 
     `pip install beautifulsoup4`
 
--   mysql-connector-pyton==8.0.21
+-   mysql-connector-python==8.0.21
 
     `pip install mysql-connector-python`
 
@@ -108,7 +108,7 @@ optional arguments:
 
 For **Thrifty**, it has **28** locations, namely **784** (28 \* 28) rental routes. There are **7840** (784 \* 2 \* 5) scraping requests. Each scraping request could bring **1** to **10** rental quotes. So the total of rental quotes could be **7840** to **78400** (7840 \* 10).
 
-For **Budget**, it has **35** locations, namely **1225** (35 \* 35) rental routes. There are **12250** (729 \* 2 \* 5) scraping requests. Each scraping request could bring **1** to **10** rental quotes. So the total of rental quotes could be **12250** to **122500** (12250 \* 10).
+For **Budget**, it has **35** locations, namely **1225** (35 \* 35) rental routes. There are **12250** (1225 \* 2 \* 5) scraping requests. Each scraping request could bring **1** to **10** rental quotes. So the total of rental quotes could be **12250** to **122500** (12250 \* 10).
 
 For **GO Rentals**, it has **6** locations, namely **36** (6 \* 6) rental routes. There are **360** (36 \* 2 \* 5) scraping requests. Each scraping request could bring around **20** rental quotes. So the total of rental quotes could be **360** to **7200** (360 \* 20).
 
