@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import import_lib
 import argparse
 import logging
