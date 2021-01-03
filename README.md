@@ -51,6 +51,10 @@ optional arguments:
 
     `pip install mysql-connector-python`
 
+## Demo
+
+![Demo](./doc/demo.gif)
+
 ## Discussions
 
 ### Concepts
